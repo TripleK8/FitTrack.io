@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KENG2026 Sport Science System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; transition: all 0.3s; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        
+        .theme-btn { background-color: #0ea5e9; color: white; transition: all 0.2s; border-radius: 12px; }
+        .theme-btn:hover { background-color: #0284c7; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
+        .theme-btn:active { transform: translateY(0); }
+        
+        .classic-card {
+            background: white; border: 1px solid #f1f5f9; border-radius: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.3s ease;
+        }
+        .classic-card:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+
+        .fade-enter { animation: softFadeIn 0.4s ease-out forwards; }
+        @keyframes softFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .clean-input {
+            background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 0.75rem 1rem; transition: all 0.2s ease; color: #1e293b; width: 100%;
+        }
+        .clean-input:focus { background-color: #ffffff; border-color: #0ea5e9; outline: none; ring: 3px rgba(14, 165, 233, 0.15); }
+        
+        .sidebar-item-active { background-color: #f0f9ff; color: #0ea5e9; font-weight: 700; border-right: 4px solid #0ea5e9; }
+
+        .metric-badge {
+            background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;
+        }
+        
+        .formula-text { font-family: monospace; font-size: 10px; color: #94a3b8; display: block; margin-top: 4px; }
+        .guide-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 8px; display: block; }
+
+        /* Report Toggle Styles */
+        .report-toggle-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .report-toggle-input:checked + span { color: #0ea5e9; }
+
+        /* Print Styles for A4 Report */
+        @media print {
+            @page { size: A4; margin: 0; }
+            body * { visibility: hidden; }
+            #report-container, #report-container * { visibility: visible; }
+            #report-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 210mm;
+                min-height: 297mm;
+                padding: 15mm;
+                background: white;
+                display: block !important;
+                color: black;
+                font-family: 'Inter', sans-serif;
+                z-index: 9999;
+            }
+            .no-print { display: none !important; }
+            .print-break { page-break-inside: avoid; }
+            
+            .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+            .report-section { margin-bottom: 20px; }
+            .report-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+            .report-table th { border-bottom: 2px solid #000; text-align: left; padding: 4px; font-weight: 900; text-transform: uppercase; }
+            .report-table td { border-bottom: 1px solid #eee; padding: 4px; }
+        }
+    </style>
+</head>
+<body class="text-slate-600 antialiased overflow-hidden">
+
+    <!-- Login View -->
+    <div id="login-view" class="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-sky-500 overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div class="relative bg-white p-10 max-w-md w-full rounded-[32px] shadow-2xl animate-in zoom-in-95 duration-500 text-center">
+            <div class="w-16 h-16 bg-sky-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-sky-100 mx-auto mb-6">
+                <i data-lucide="shield-check" class="w-8 h-8"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 tracking-tighter">System Access</h2>
+            <p class="text-slate-400 text-sm font-semibold uppercase tracking-widest mt-1 mb-8">KENG2026 Sports Science</p>
+            <div class="space-y-4">
+                <input type="password" id="login-pass" class="clean-input text-center font-bold" placeholder="Enter Password" onkeydown="if(event.key==='Enter') App.handleLogin()">
+                <button onclick="App.handleLogin()" class="theme-btn w-full py-4 font-black uppercase text-sm shadow-xl shadow-sky-100">Unlock System</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="main-system" class="flex h-screen relative hidden no-print">
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" onclick="App.toggleSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden lg:hidden"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-100 flex flex-col transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300">
+            <div class="p-6 flex items-center gap-3 border-b border-slate-50">
+                <div class="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-sky-100">
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                </div>
+                <span class="font-extrabold text-xl tracking-tighter text-slate-800">KENG<span class="text-sky-500">2026</span></span>
+            </div>
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto hide-scroll">
+                <button onclick="App.setTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                    <span class="text-sm font-semibold">Dashboard</span>
+                </button>
+                <button onclick="App.setTab('patients')" id="nav-patients" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="text-sm font-semibold">Registry</span>
+                </button>
+                <button onclick="App.setTab('fitness')" id="nav-fitness" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                    <i data-lucide="calculator" class="w-5 h-5"></i>
+                    <span class="text-sm font-semibold">Lab Tools</span>
+                </button>
+                <button onclick="App.setTab('form')" id="nav-form" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                    <i data-lucide="user-plus" class="w-5 h-5"></i>
+                    <span class="text-sm font-semibold">New Entry</span>
+                </button>
+            </nav>
+            <div class="p-4 bg-slate-50/50 border-t border-slate-100">
+                <button onclick="App.logout()" class="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-400 hover:text-red-500 transition-all">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span>Sign Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 bg-[#f8fafc] overflow-y-auto">
+            <header class="h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-6 sticky top-0 z-40">
+                <div class="flex items-center gap-4">
+                    <button onclick="App.toggleSidebar()" class="lg:hidden p-2 text-slate-500"><i data-lucide="menu"></i></button>
+                    <h1 id="page-title" class="font-bold text-slate-800 text-lg uppercase tracking-wide">Dashboard</h1>
+                </div>
+            </header>
+
+            <div class="p-6 max-w-7xl mx-auto w-full text-slate-700">
+                <!-- Dashboard Section -->
+                <section id="view-dashboard" class="fade-enter space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-slate-800">
+                        <div class="classic-card p-6 border-l-4 border-l-sky-500">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Registry</p>
+                            <h2 id="stat-total" class="text-4xl font-black mt-1">0</h2>
+                        </div>
+                        <div class="classic-card p-6 border-l-4 border-l-emerald-500">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg Max HR</p>
+                            <h2 id="stat-avg-hr" class="text-4xl font-black mt-1">0</h2>
+                        </div>
+                        <div class="classic-card p-6 border-l-4 border-l-amber-500">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg BMI</p>
+                            <h2 id="stat-avg-bmi" class="text-4xl font-black mt-1">0</h2>
+                        </div>
+                    </div>
+                    <div class="classic-card p-6">
+                        <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-sky-500"></i> Recently Added</h3>
+                        <div id="recent-list" class="space-y-3"></div>
+                    </div>
+                </section>
+
+                <!-- Registry Section -->
+                <section id="view-patients" class="hidden fade-enter space-y-4">
+                    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                        <input type="text" id="search-input" onkeyup="App.renderTable()" class="clean-input w-full md:w-96 text-sm" placeholder="Search by name or alias...">
+                        <button onclick="App.setTab('form')" class="theme-btn px-6 py-2.5 text-sm font-bold flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> New Entry</button>
+                    </div>
+                    <div class="classic-card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-100">
+                                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Name</th>
+                                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Profile</th>
+                                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Data Summary</th>
+                                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="patient-table-body" class="divide-y divide-slate-50"></tbody>
+                            </table>
+                        </div>
+                        <div id="empty-state" class="py-20 text-center hidden">
+                            <p class="text-slate-400 text-sm font-medium">No entries found</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Lab Tools Section -->
+                <section id="view-fitness" class="hidden fade-enter space-y-6">
+                    <!-- Sync Card -->
+                    <div class="classic-card p-6 border-t-4 border-t-sky-500 flex flex-col md:flex-row items-center gap-4">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-slate-800">Registry Sync</h3>
+                            <p class="text-[10px] text-slate-400 uppercase font-black">Link stats to an entry for auto-saving</p>
+                        </div>
+                        <select id="fit-registry-select" class="clean-input text-sm md:w-72 bg-white"></select>
+                        <button onclick="App.loadFromRegistry()" class="theme-btn px-8 py-3 text-xs font-black uppercase">Sync Data</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Strength Lab -->
+                        <div class="classic-card p-6 border-t-4 border-t-rose-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="dumbbell" class="text-rose-500"></i> Strength Lab (1RM)</h3>
+                                <label class="report-toggle-label">
+                                    <input type="checkbox" id="toggle-report-strength" class="report-toggle-input w-3 h-3 rounded text-sky-500" onchange="App.updateReportSettings('strength')">
+                                    <span>Include in Report</span>
+                                </label>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <select id="fit-1rm-exercise" class="clean-input text-sm bg-white" onchange="App.toggleCustomExercise()">
+                                        <option>Back Squat</option><option>Bench Press</option><option>Deadlift</option><option>Barbell Row</option><option>Overhead Press</option>
+                                        <option value="custom">Other (Custom Input)</option>
+                                    </select>
+                                    <input type="text" id="fit-1rm-custom-name" class="clean-input text-sm mt-2 hidden" placeholder="Enter exercise name...">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input type="number" id="fit-1rm-weight" class="clean-input text-sm" placeholder="Weight (kg)">
+                                    <input type="number" id="fit-1rm-reps" class="clean-input text-sm" placeholder="Reps">
+                                </div>
+                                <button onclick="App.calculateStrength()" class="theme-btn w-full py-3 bg-rose-500 hover:bg-rose-600 font-black uppercase tracking-widest text-xs">Analyze & Save Record</button>
+                                
+                                <div id="res-1rm-box" class="hidden mt-4">
+                                    <div class="p-4 bg-rose-50 rounded-2xl text-center border border-rose-100 mb-4">
+                                        <span class="text-[10px] font-black text-rose-400 uppercase">Estimated 1RM</span>
+                                        <p id="res-1rm" class="text-4xl font-black text-rose-600">0 kg</p>
+                                    </div>
+                                    <div class="overflow-hidden rounded-xl border border-slate-100">
+                                        <table class="w-full text-[10px]">
+                                            <tr class="bg-slate-50 font-black uppercase text-slate-400 border-b border-slate-100"><th class="p-2">Load (%)</th><th class="p-2">Weight</th><th class="p-2">ACSM Goal</th></tr>
+                                            <tbody id="res-1rm-table" class="text-slate-600 font-bold"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Metabolic Lab -->
+                        <div class="classic-card p-6 border-t-4 border-t-amber-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="utensils" class="text-amber-500"></i> Metabolic Lab</h3>
+                                <label class="report-toggle-label">
+                                    <input type="checkbox" id="toggle-report-metabolic" class="report-toggle-input w-3 h-3 rounded text-sky-500" onchange="App.updateReportSettings('metabolic')">
+                                    <span>Include in Report</span>
+                                </label>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <input type="number" id="fit-weight" class="clean-input text-sm" placeholder="Weight">
+                                <input type="number" id="fit-height" class="clean-input text-sm" placeholder="Height">
+                                <input type="number" id="fit-age" class="clean-input text-sm" placeholder="Age">
+                                <select id="fit-gender" class="clean-input text-sm bg-white"><option value="male">Male</option><option value="female">Female</option></select>
+                            </div>
+                            <select id="fit-activity" class="clean-input text-xs mb-4">
+                                <option value="1.2">Sedentary (x1.2)</option><option value="1.375">Light (x1.375)</option><option value="1.55">Moderate (x1.55)</option><option value="1.725">Active (x1.725)</option><option value="1.9">Athlete (x1.9)</option>
+                            </select>
+                            <button onclick="App.calculateMetabolic()" class="theme-btn w-full py-3 bg-amber-500 hover:bg-amber-600 font-black uppercase text-xs">Analyze & Save Results</button>
+                            <div class="grid grid-cols-2 gap-4 mt-4 text-slate-800">
+                                <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100"><span class="text-[9px] font-black uppercase text-amber-500">BMR</span><p id="res-bmr" class="text-2xl font-black">0</p></div>
+                                <div class="p-4 bg-orange-50 rounded-2xl border border-orange-100"><span class="text-[9px] font-black uppercase text-orange-500">TDEE</span><p id="res-tdee" class="text-2xl font-black">0</p></div>
+                            </div>
+                            <div id="res-nutri" class="hidden mt-4 space-y-4">
+                                <div><span class="guide-label">Protein (g)</span><div id="res-prot" class="text-[11px] space-y-1 font-bold text-slate-700"></div></div>
+                                <div><span class="guide-label">Carbs (g)</span><div id="res-carb" class="text-[11px] space-y-1 font-bold text-slate-700"></div></div>
+                            </div>
+                        </div>
+
+                        <!-- Cardiac Lab -->
+                        <div class="classic-card p-6 border-t-4 border-t-emerald-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="heart" class="text-emerald-500"></i> Cardiac Lab</h3>
+                                <label class="report-toggle-label">
+                                    <input type="checkbox" id="toggle-report-cardiac" class="report-toggle-input w-3 h-3 rounded text-sky-500" onchange="App.updateReportSettings('cardiac')">
+                                    <span>Include in Report</span>
+                                </label>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <input type="number" id="fit-hr-age" class="clean-input text-sm" placeholder="Age">
+                                <input type="number" id="fit-hr-rhr" class="clean-input text-sm" placeholder="Rest HR">
+                            </div>
+                            <button onclick="App.calculateHR()" class="theme-btn w-full py-3 bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-xs">Map Zones & Save</button>
+                            <div id="res-hr-zones" class="mt-4 space-y-2 hidden"></div>
+                        </div>
+
+                        <!-- Performance Lab -->
+                        <div class="classic-card p-6 border-t-4 border-t-indigo-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="timer" class="text-indigo-500"></i> Performance Lab</h3>
+                                <label class="report-toggle-label">
+                                    <input type="checkbox" id="toggle-report-performance" class="report-toggle-input w-3 h-3 rounded text-sky-500" onchange="App.updateReportSettings('performance')">
+                                    <span>Include in Report</span>
+                                </label>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
+                                <input type="number" id="vdot-dist" class="clean-input text-sm md:col-span-1" placeholder="KM">
+                                <input type="number" id="vdot-h" class="clean-input text-sm" placeholder="H">
+                                <input type="number" id="vdot-m" class="clean-input text-sm" placeholder="M">
+                                <input type="number" id="vdot-s" class="clean-input text-sm" placeholder="S">
+                            </div>
+                            <button onclick="App.calculateVDOT()" class="theme-btn w-full py-3 bg-indigo-500 hover:bg-indigo-600 font-black uppercase text-xs">Analyze & Save VDOT</button>
+                            <div id="res-vdot-box" class="hidden mt-4">
+                                <div class="p-4 bg-indigo-50 rounded-2xl text-center mb-4 border border-indigo-100"><span class="text-[9px] font-black uppercase text-indigo-500">VDOT Score</span><p id="res-vdot" class="text-4xl font-black text-indigo-600">0.0</p></div>
+                                <div id="res-vdot-paces" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Entry Form Section -->
+                <section id="view-form" class="hidden fade-enter">
+                    <div class="classic-card p-8 lg:max-w-3xl mx-auto">
+                        <form id="patient-form" onsubmit="event.preventDefault(); App.savePatient();" class="space-y-6">
+                            <input type="hidden" id="p-edit-id">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2"><label class="text-xs font-bold text-slate-400 mb-2 block uppercase">Full Name</label><input type="text" id="p-name" required class="clean-input font-bold" placeholder="Full Name"></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 block uppercase">Alias</label><input type="text" id="p-nickname" class="clean-input" placeholder="Alias"></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 block uppercase">Gender</label><select id="p-gender" class="clean-input bg-white"><option value="male">Male</option><option value="female">Female</option></select></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 block uppercase">Weight (kg)</label><input type="number" id="p-weight" step="0.1" class="clean-input" placeholder="0.0"></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 block uppercase">Height (cm)</label><input type="number" id="p-height" class="clean-input" placeholder="0"></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 block uppercase">Age</label><input type="number" id="p-age" class="clean-input" placeholder="0"></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 block uppercase">Rest HR (bpm)</label><input type="number" id="p-rhr" class="clean-input" placeholder="0"></div>
+                                <div class="md:col-span-2"><label class="text-xs font-bold text-slate-400 mb-2 block uppercase">Notes</label><textarea id="p-note" rows="3" class="clean-input resize-none" placeholder="Notes..."></textarea></div>
+                            </div>
+                            <div class="pt-6 flex gap-3"><button type="submit" class="theme-btn px-10 py-4 font-black uppercase tracking-widest text-xs">Commit Record</button><button type="button" onclick="App.resetForm(); App.setTab('patients');" class="px-6 py-4 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-600 uppercase">Discard</button></div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden Report Container (A4 Size) -->
+    <div id="report-container" class="hidden"></div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white p-8 max-w-lg w-full rounded-[32px] shadow-2xl flex flex-col max-h-[80vh]">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-slate-800">Strength History</h3><button onclick="App.closeHistory()" class="p-2 text-slate-400"><i data-lucide="x"></i></button></div>
+            <div id="history-content" class="flex-1 overflow-y-auto space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- Profile View Modal -->
+    <div id="profile-modal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white p-8 max-w-lg w-full rounded-[32px] shadow-2xl flex flex-col max-h-[80vh]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-black text-slate-800">Profile Details</h3>
+                <div class="flex items-center gap-2">
+                    <button id="modal-print-btn" class="p-2 text-slate-400 hover:text-sky-500 transition-all"><i data-lucide="printer" class="w-6 h-6"></i></button>
+                    <button onclick="App.closeProfileModal()" class="p-2 text-slate-400 hover:text-slate-600 transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
+                </div>
+            </div>
+            <div id="profile-content" class="flex-1 overflow-y-auto space-y-4 hide-scroll">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div id="delete-modal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+        <div class="bg-white p-8 max-w-sm w-full rounded-3xl shadow-2xl text-center">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">Confirm Deletion?</h3>
+            <div class="flex gap-3"><button onclick="App.closeDeleteModal()" class="flex-1 px-4 py-3 font-bold text-slate-500 bg-slate-100 rounded-xl">Cancel</button><button onclick="App.confirmDelete()" class="flex-1 px-4 py-3 font-bold text-white bg-red-500 rounded-xl">Delete</button></div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 right-6 bg-white border border-slate-100 px-6 py-4 rounded-2xl shadow-2xl translate-y-32 transition-all duration-500 flex items-center gap-4 z-[400]">
+        <div id="toast-icon" class="w-10 h-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center"></div>
+        <p id="toast-msg" class="text-sm font-bold text-slate-800"></p>
+    </div>
+
+    <script>
+        const App = {
+            db: 'keng2026_db_v1', patients: [], isLoggedIn: false, activeTab: 'dashboard', deleteId: null,
+            
+            init() {
+                this.load(); lucide.createIcons();
+                if (localStorage.getItem('keng_session') === 'active') this.showMain();
+            },
+
+            handleLogin() {
+                const p = document.getElementById('login-pass').value;
+                if (p === 'Korntawat2026') { localStorage.setItem('keng_session', 'active'); this.showMain(); }
+                else { this.toast("Unauthorized", "shield-off"); }
+            },
+
+            showMain() {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('main-system').classList.remove('hidden');
+                this.setTab('dashboard');
+            },
+
+            logout() { localStorage.removeItem('keng_session'); location.reload(); },
+
+            load() { const s = localStorage.getItem(this.db); this.patients = s ? JSON.parse(s) : []; },
+            save() { localStorage.setItem(this.db, JSON.stringify(this.patients)); },
+
+            setTab(t) {
+                this.activeTab = t;
+                document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+                document.getElementById(`view-${t}`).classList.remove('hidden');
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('sidebar-item-active'));
+                const nav = document.getElementById(`nav-${t}`); if(nav) nav.classList.add('sidebar-item-active');
+                if (t === 'patients') this.renderTable();
+                if (t === 'dashboard') this.updateDash();
+                if (t === 'fitness') this.populateSync();
+                
+                if (window.innerWidth < 1024) {
+                    document.getElementById('sidebar').classList.add('-translate-x-full');
+                    document.getElementById('sidebar-overlay').classList.add('hidden');
+                }
+                lucide.createIcons();
+            },
+
+            updateDash() {
+                const bmis = this.patients.map(p => parseFloat(p.bmi)).filter(v => !isNaN(v));
+                const hrs = this.patients.map(p => parseInt(p.maxHR)).filter(v => !isNaN(v));
+                document.getElementById('stat-total').innerText = this.patients.length;
+                document.getElementById('stat-avg-bmi').innerText = bmis.length ? (bmis.reduce((a,b)=>a+b,0)/bmis.length).toFixed(1) : "0";
+                document.getElementById('stat-avg-hr').innerText = hrs.length ? Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length) : "0";
+                const list = document.getElementById('recent-list'); list.innerHTML = '';
+                this.patients.slice(-3).reverse().forEach(p => {
+                    const d = document.createElement('div'); d.className = "flex justify-between p-3 bg-slate-50 rounded-xl items-center border border-slate-100";
+                    d.innerHTML = `<span class="font-bold text-sm text-slate-700">${p.name}</span><span class="metric-badge">BMI ${p.bmi}</span>`;
+                    list.appendChild(d);
+                });
+            },
+
+            renderTable() {
+                const tbody = document.getElementById('patient-table-body');
+                const s = document.getElementById('search-input').value.toLowerCase();
+                tbody.innerHTML = '';
+                const filtered = this.patients.filter(p => p.name.toLowerCase().includes(s) || (p.nickname && p.nickname.toLowerCase().includes(s)));
+                if(filtered.length === 0) document.getElementById('empty-state').classList.remove('hidden');
+                else {
+                    document.getElementById('empty-state').classList.add('hidden');
+                    filtered.forEach(p => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50 transition-colors";
+                        const latest = p.records?.length ? p.records[p.records.length-1] : null;
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 font-bold text-sm text-slate-800">${p.name}<p class="text-[10px] text-slate-400 italic">${p.nickname || ''}</p></td>
+                            <td class="px-6 py-4 text-[10px] font-black uppercase text-slate-500">${p.gender} • ${p.age}Y</td>
+                            <td class="px-6 py-4"><div class="flex gap-2"><span class="metric-badge bg-sky-50 text-sky-600">BMI ${p.bmi}</span>${latest ? `<button onclick="App.viewHistory(${p.id})" class="metric-badge bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all">${latest.oneRM}kg</button>` : ''}</div></td>
+                            <td class="px-6 py-4 text-right space-x-2">
+                                <button onclick="App.viewProfile(${p.id})" class="p-2 text-slate-300 hover:text-emerald-500 transition-all"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                <button onclick="App.printReport(${p.id})" class="p-2 text-slate-300 hover:text-indigo-500 transition-all"><i data-lucide="printer" class="w-4 h-4"></i></button>
+                                <button onclick="App.editPatient(${p.id})" class="p-2 text-slate-300 hover:text-sky-500 transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="App.openDelete(${p.id})" class="p-2 text-slate-300 hover:text-red-500 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+                lucide.createIcons();
+            },
+
+            populateSync() {
+                const sel = document.getElementById('fit-registry-select'); sel.innerHTML = '<option value="">Select from Registry...</option>';
+                this.patients.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.innerText = `${p.name} ${p.nickname ? '('+p.nickname+')' : ''}`; sel.appendChild(o); });
+            },
+
+            loadFromRegistry() {
+                const id = document.getElementById('fit-registry-select').value; if(!id) return;
+                const p = this.patients.find(i => i.id == id);
+                if(p) {
+                    ['res-1rm-box', 'res-nutri', 'res-hr-zones', 'res-vdot-box'].forEach(k => document.getElementById(k).classList.add('hidden'));
+                    
+                    document.getElementById('fit-weight').value = p.weight || '';
+                    document.getElementById('fit-height').value = p.height || '';
+                    document.getElementById('fit-age').value = p.age || '';
+                    document.getElementById('fit-gender').value = p.gender || 'male';
+                    document.getElementById('fit-activity').value = p.activityLevel || '1.2';
+
+                    document.getElementById('fit-hr-age').value = p.age || '';
+                    document.getElementById('fit-hr-rhr').value = p.rhr || 0;
+                    
+                    document.getElementById('fit-1rm-weight').value = '';
+                    document.getElementById('fit-1rm-reps').value = '';
+                    document.getElementById('fit-1rm-exercise').value = 'Back Squat';
+                    document.getElementById('fit-1rm-custom-name').classList.add('hidden');
+                    document.getElementById('fit-1rm-custom-name').value = '';
+
+                    // Set Report Toggles based on saved data
+                    const settings = p.reportSettings || { strength: true, metabolic: true, cardiac: true, performance: true };
+                    document.getElementById('toggle-report-strength').checked = settings.strength;
+                    document.getElementById('toggle-report-metabolic').checked = settings.metabolic;
+                    document.getElementById('toggle-report-cardiac').checked = settings.cardiac;
+                    document.getElementById('toggle-report-performance').checked = settings.performance;
+
+                    this.toast(`Synced data for: ${p.name}`, "refresh-cw");
+                }
+            },
+
+            updateReportSettings(tool) {
+                const id = document.getElementById('fit-registry-select').value;
+                if (!id) return;
+                const p = this.patients.find(i => i.id == id);
+                if (p) {
+                    if (!p.reportSettings) p.reportSettings = { strength: true, metabolic: true, cardiac: true, performance: true };
+                    p.reportSettings[tool] = document.getElementById(`toggle-report-${tool}`).checked;
+                    this.save();
+                }
+            },
+
+            toggleCustomExercise() {
+                const select = document.getElementById('fit-1rm-exercise');
+                const customInput = document.getElementById('fit-1rm-custom-name');
+                if (select.value === 'custom') {
+                    customInput.classList.remove('hidden');
+                } else {
+                    customInput.classList.add('hidden');
+                    customInput.value = '';
+                }
+            },
+
+            calculateStrength() {
+                const w = parseFloat(document.getElementById('fit-1rm-weight').value) || 0;
+                const r = parseInt(document.getElementById('fit-1rm-reps').value) || 0;
+                let ex = document.getElementById('fit-1rm-exercise').value;
+                if (ex === 'custom') {
+                    ex = document.getElementById('fit-1rm-custom-name').value.trim() || 'Custom Exercise';
+                }
+                const id = document.getElementById('fit-registry-select').value;
+                if(w <= 0 || r <= 0) return;
+                const max = (w * (1 + r/30)).toFixed(1);
+                document.getElementById('res-1rm').innerText = `${max} kg`;
+                document.getElementById('res-1rm-box').classList.remove('hidden');
+                
+                const table = document.getElementById('res-1rm-table'); table.innerHTML = '';
+                const acsm = [{p:1.0,g:"MAX / Test"},{p:0.95,g:"Strength"},{p:0.9,g:"Strength"},{p:0.85,g:"Strength/Power"},{p:0.8,g:"Hypertrophy"},{p:0.75,g:"Hypertrophy"},{p:0.7,g:"Hyper/Endurance"},{p:0.65,g:"Endurance"},{p:0.6,g:"Endurance/Warmup"}];
+                acsm.forEach(item => {
+                    const tr = document.createElement('tr'); tr.className = "border-b border-slate-50";
+                    tr.innerHTML = `<td class="p-2">${Math.round(item.p*100)}%</td><td class="p-2 font-bold">${(max*item.p).toFixed(1)}kg</td><td class="p-2 text-slate-400 italic">${item.g}</td>`;
+                    table.appendChild(tr);
+                });
+
+                if(id) {
+                    const p = this.patients.find(i => i.id == id);
+                    if(p) { if(!p.records) p.records = []; p.records.push({ date: new Date().toISOString(), exercise: ex, weight: w, reps: r, oneRM: max }); this.save(); this.toast("Strength Record Saved", "check"); }
+                }
+            },
+
+            calculateMetabolic() {
+                const w = parseFloat(document.getElementById('fit-weight').value)||0, h = parseFloat(document.getElementById('fit-height').value)||0, a = parseInt(document.getElementById('fit-age').value)||0, g = document.getElementById('fit-gender').value, act = parseFloat(document.getElementById('fit-activity').value);
+                const id = document.getElementById('fit-registry-select').value;
+                if(w<=0||h<=0||a<=0) return;
+                const bmr = (10*w) + (6.25*h) - (5*a) + (g === 'male' ? 5 : -161);
+                const tdee = bmr * act;
+                document.getElementById('res-bmr').innerText = Math.round(bmr);
+                document.getElementById('res-tdee').innerText = Math.round(tdee);
+                document.getElementById('res-nutri').classList.remove('hidden');
+                
+                const pEl = document.getElementById('res-prot'), cEl = document.getElementById('res-carb');
+                let protRange = g==='male' ? `${Math.round(w*1.2)}-${Math.round(w*2.5)}g` : `${Math.round(w*1.0)}-${Math.round(w*2.0)}g`;
+                let carbRange = g==='male' ? `${Math.round(w*3)}-${Math.round(w*10)}g` : `${Math.round(w*2)}-${Math.round(w*8)}g`;
+                pEl.innerHTML = `<p class="flex justify-between"><span>Optimal Daily Intake:</span><span>${protRange}</span></p>`;
+                cEl.innerHTML = `<p class="flex justify-between"><span>Activity-based Guide:</span><span>${carbRange}</span></p>`;
+
+                if (id) {
+                    const p = this.patients.find(i => i.id == id);
+                    if (p) {
+                        p.weight = w; p.height = h; p.age = a; p.gender = g; p.activityLevel = act;
+                        p.bmi = (w / ((h/100)**2)).toFixed(1);
+                        p.bmr = Math.round(bmr); p.tdee = Math.round(tdee);
+                        p.protRange = protRange; p.carbRange = carbRange;
+                        this.save(); this.toast("Metabolic Stats Saved", "check-circle");
+                    }
+                }
+            },
+
+            calculateHR() {
+                const a = parseInt(document.getElementById('fit-hr-age').value)||0, r = parseInt(document.getElementById('fit-hr-rhr').value)||0;
+                const id = document.getElementById('fit-registry-select').value;
+                if(a<=0) return;
+                const box = document.getElementById('res-hr-zones'); box.innerHTML = ''; box.classList.remove('hidden');
+                const mhr = 208 - (0.7*a), hrr = r > 30 ? mhr-r : mhr, base = r > 30 ? r : 0;
+                const zones = [{n:"Z1 Recovery",p:[0.5,0.6],c:"bg-slate-50"},{n:"Z2 Aerobic",p:[0.6,0.7],c:"bg-emerald-50 text-emerald-700"},{n:"Z3 Tempo",p:[0.7,0.8],c:"bg-sky-50 text-sky-700"},{n:"Z4 Anaerobic",p:[0.8,0.9],c:"bg-orange-50 text-orange-700"},{n:"Z5 Maximum",p:[0.9,1.0],c:"bg-rose-50 text-rose-700"}];
+                let savedZones = [];
+                zones.forEach(z => {
+                    const low = Math.round(hrr*z.p[0]+base), high = Math.round(hrr*z.p[1]+base);
+                    savedZones.push({ name: z.n, range: `${low}-${high} bpm` });
+                    const d = document.createElement('div'); d.className = `p-3 rounded-xl flex justify-between font-bold text-xs ${z.c}`;
+                    d.innerHTML = `<span>${z.n}</span><span>${low}-${high} bpm</span>`; box.appendChild(d);
+                });
+                if (id) {
+                    const p = this.patients.find(i => i.id == id);
+                    if (p) { p.age = a; p.rhr = r; p.maxHR = Math.round(mhr); p.zones = savedZones; this.save(); this.toast("Cardiac Stats Saved", "check-circle"); }
+                }
+            },
+
+            calculateVDOT() {
+                const d = parseFloat(document.getElementById('vdot-dist').value), h = parseInt(document.getElementById('vdot-h').value)||0, m = parseInt(document.getElementById('vdot-m').value)||0, s = parseInt(document.getElementById('vdot-s').value)||0;
+                const id = document.getElementById('fit-registry-select').value;
+                const t = (h*60)+m+(s/60); if(d<=0 || t<=0) return;
+                const v = (d*1000)/t, cost = 0.182258*v + 0.000104*Math.pow(v,2) - 4.60, pct = 0.8 + 0.1894393*Math.exp(-0.012778*t) + 0.2989558*Math.exp(-0.1932605*t), vdot = cost/pct;
+                document.getElementById('res-vdot-box').classList.remove('hidden'); document.getElementById('res-vdot').innerText = vdot.toFixed(1);
+                const pBox = document.getElementById('res-vdot-paces'); pBox.innerHTML = '';
+                const types = [{n:"Easy",p:0.7},{n:"Marathon",p:0.8},{n:"Threshold",p:0.88},{n:"Interval",p:0.98}];
+                let savedPaces = [];
+                types.forEach(type => {
+                    const tv = vdot*type.p, a_q = 0.000104, b_q = 0.182258, c_q = -(4.60 + tv);
+                    const vr = (-b_q + Math.sqrt(Math.pow(b_q,2) - 4*a_q*c_q)) / (2*a_q), pm = 1000/vr;
+                    const pStr = `${Math.floor(pm)}:${Math.round((pm%1)*60).toString().padStart(2,'0')}/km`;
+                    savedPaces.push({ name: type.n, pace: pStr });
+                    pBox.innerHTML += `<div class="flex justify-between p-2 text-[11px] font-bold border-b border-slate-50"><span>${type.n}</span><span>${pStr}</span></div>`;
+                });
+                if (id) {
+                    const p = this.patients.find(i => i.id == id);
+                    if (p) { p.vdot = vdot.toFixed(1); p.paces = savedPaces; this.save(); this.toast("VDOT Data Saved", "check-circle"); }
+                }
+            },
+
+            savePatient() {
+                const id = document.getElementById('p-edit-id').value;
+                const w = parseFloat(document.getElementById('p-weight').value)||0, h = parseFloat(document.getElementById('p-height').value)||0, a = parseInt(document.getElementById('p-age').value)||0, n = document.getElementById('p-name').value;
+                if(!n) return;
+                const existing = id ? this.patients.find(i => i.id == id) : {};
+                const data = {
+                    ...existing,
+                    id: id ? parseInt(id) : Date.now(), name: n, nickname: document.getElementById('p-nickname').value, gender: document.getElementById('p-gender').value,
+                    weight: w, height: h, age: a, rhr: parseInt(document.getElementById('p-rhr').value)||0, note: document.getElementById('p-note').value,
+                    bmi: (w>0&&h>0)?(w/((h/100)**2)).toFixed(1):'0.0', maxHR: a>0?(208-0.7*a).toFixed(0):'0'
+                };
+                if(id) { const idx = this.patients.findIndex(i => i.id == id); this.patients[idx] = data; } else this.patients.push(data);
+                this.save(); this.toast("Registry Updated", "check-circle"); this.resetForm(); this.setTab('patients');
+            },
+
+            viewHistory(id) {
+                const p = this.patients.find(i => i.id == id); if(!p) return;
+                const content = document.getElementById('history-content'); content.innerHTML = '';
+                if(!p.records?.length) content.innerHTML = '<p class="text-center py-10 text-slate-400">No records found</p>';
+                else {
+                    p.records.slice().reverse().forEach((r, idx) => {
+                        const div = document.createElement('div'); div.className = "p-4 bg-slate-50 rounded-2xl flex justify-between items-center border border-slate-100";
+                        div.innerHTML = `<div><p class="text-[10px] font-black text-rose-500 uppercase tracking-widest">${r.exercise}</p><p class="text-lg font-black text-slate-800">${r.oneRM} kg</p><p class="text-[9px] text-slate-400 font-bold">${r.date ? new Date(r.date).toLocaleDateString() : 'N/A'}</p></div><button onclick="App.delRecord(${id}, ${p.records.length-1-idx})" class="p-2 text-slate-300 hover:text-red-500 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+                        content.appendChild(div);
+                    });
+                }
+                document.getElementById('history-modal').classList.replace('hidden', 'flex'); lucide.createIcons();
+            },
+
+            viewProfile(id) {
+                const p = this.patients.find(i => i.id == id); if(!p) return;
+                const content = document.getElementById('profile-content');
+                document.getElementById('modal-print-btn').onclick = () => App.printReport(id);
+                
+                content.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div class="w-14 h-14 bg-sky-500 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg shadow-sky-100">${p.name[0]}</div>
+                            <div>
+                                <h4 class="font-black text-slate-800 text-xl tracking-tight">${p.name}</h4>
+                                <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest">${p.nickname || 'NO ALIAS'} • ${p.gender.toUpperCase()} • ${p.age} YEARS</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-white border border-slate-100 rounded-2xl">
+                                <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest block mb-1">Body Composition</span>
+                                <div class="flex justify-between items-baseline"><span class="text-xs font-bold text-slate-500">Weight</span><span class="text-lg font-black text-slate-800">${p.weight}kg</span></div>
+                                <div class="flex justify-between items-baseline"><span class="text-xs font-bold text-slate-500">Height</span><span class="text-lg font-black text-slate-800">${p.height}cm</span></div>
+                                <div class="flex justify-between items-baseline pt-2 border-t border-slate-50 mt-2"><span class="text-xs font-bold text-sky-600">BMI</span><span class="text-xl font-black text-sky-600">${p.bmi}</span></div>
+                            </div>
+                            <div class="p-4 bg-white border border-slate-100 rounded-2xl">
+                                <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest block mb-1">Metabolic Rate</span>
+                                <div class="flex justify-between items-baseline"><span class="text-xs font-bold text-slate-500">BMR</span><span class="text-lg font-black text-slate-800">${p.bmr || '-'}</span></div>
+                                <div class="flex justify-between items-baseline"><span class="text-xs font-bold text-slate-500">TDEE</span><span class="text-lg font-black text-slate-800">${p.tdee || '-'}</span></div>
+                                <div class="flex justify-between items-baseline pt-2 border-t border-slate-50 mt-2"><span class="text-xs font-bold text-amber-600">Max HR</span><span class="text-xl font-black text-rose-600">${p.maxHR}</span></div>
+                            </div>
+                        </div>
+
+                        ${p.zones?.length ? `
+                        <div>
+                            <span class="guide-label">Training Heart Zones</span>
+                            <div class="grid grid-cols-1 gap-1">
+                                ${p.zones.map(z => `<div class="flex justify-between p-2 bg-slate-50 rounded-lg text-[10px] font-bold"><span>${z.name}</span><span class="text-slate-500">${z.range}</span></div>`).join('')}
+                            </div>
+                        </div>` : ''}
+
+                        ${p.paces?.length ? `
+                        <div>
+                            <span class="guide-label">Running Paces (VDOT: ${p.vdot})</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                ${p.paces.map(pc => `<div class="flex justify-between p-2 bg-indigo-50/50 border border-indigo-100 rounded-lg text-[10px] font-black text-indigo-700"><span>${pc.name}</span><span>${pc.pace}</span></div>`).join('')}
+                            </div>
+                        </div>` : ''}
+
+                        <div>
+                            <span class="guide-label">Clinical Notes</span>
+                            <div class="p-4 bg-slate-50 rounded-2xl text-xs text-slate-600 leading-relaxed italic border border-slate-100 min-h-[60px]">
+                                ${p.note || 'No special clinical notes recorded.'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('profile-modal').classList.replace('hidden', 'flex');
+                lucide.createIcons();
+            },
+
+            closeProfileModal() { document.getElementById('profile-modal').classList.replace('flex', 'hidden'); },
+            delRecord(pid, ridx) { const p = this.patients.find(i => i.id == pid); if(p && p.records) { p.records.splice(ridx, 1); this.save(); this.viewHistory(pid); this.renderTable(); } },
+            closeHistory() { document.getElementById('history-modal').classList.replace('flex', 'hidden'); },
+            openDelete(id) { this.deleteId = id; document.getElementById('delete-modal').classList.replace('hidden', 'flex'); },
+            closeDeleteModal() { document.getElementById('delete-modal').classList.replace('flex', 'hidden'); },
+            confirmDelete() { this.patients = this.patients.filter(p => p.id !== this.deleteId); this.save(); this.renderTable(); this.closeDeleteModal(); },
+            
+            editPatient(id) {
+                const p = this.patients.find(i => i.id == id);
+                if(p) {
+                    ['p-name', 'p-nickname', 'p-weight', 'p-height', 'p-age', 'p-rhr', 'p-note'].forEach(el => document.getElementById(el).value = p[el.split('-')[1]] || '');
+                    document.getElementById('p-gender').value = p.gender; document.getElementById('p-edit-id').value = p.id; this.setTab('form');
+                }
+            },
+
+            resetForm() { const f = document.getElementById('patient-form'); if (f) f.reset(); document.getElementById('p-edit-id').value = ''; },
+            toggleSidebar() { const s = document.getElementById('sidebar'), o = document.getElementById('sidebar-overlay'); s.classList.contains('-translate-x-full') ? (s.classList.remove('-translate-x-full'), o.classList.remove('hidden')) : (s.classList.add('-translate-x-full'), o.classList.add('hidden')); },
+            toast(m, i) {
+                const t = document.getElementById('toast'); document.getElementById('toast-msg').innerText = m; document.getElementById('toast-icon').innerHTML = `<i data-lucide="${i}"></i>`;
+                lucide.createIcons(); t.classList.remove('translate-y-32'); setTimeout(() => t.classList.add('translate-y-32'), 3000);
+            },
+
+            printReport(id) {
+                const p = this.patients.find(i => i.id == id); if (!p) return;
+                const settings = p.reportSettings || { strength: true, metabolic: true, cardiac: true, performance: true };
+                const container = document.getElementById('report-container');
+                
+                let historyHtml = (settings.strength && p.records?.length) ? `<table class="report-table"><thead><tr><th>Date</th><th>Exercise</th><th>Load</th><th style="text-align:right">1RM</th></tr></thead><tbody>${p.records.slice().reverse().map(r => `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.exercise}</td><td>${r.weight}kg x ${r.reps}</td><td style="text-align:right">${r.oneRM} kg</td></tr>`).join('')}</tbody></table>` : '';
+                let zonesHtml = (settings.cardiac && p.zones?.length) ? `<table class="report-table"><thead><tr><th>Zone</th><th style="text-align:right">Intensity</th></tr></thead><tbody>${p.zones.map(z => `<tr><td>${z.name}</td><td style="text-align:right">${z.range}</td></tr>`).join('')}</tbody></table>` : '';
+                let pacesHtml = (settings.performance && p.paces?.length) ? `<table class="report-table"><thead><tr><th>Pace Type</th><th style="text-align:right">Min/KM</th></tr></thead><tbody>${p.paces.map(pc => `<tr><td>${pc.name}</td><td style="text-align:right">${pc.pace}</td></tr>`).join('')}</tbody></table>` : '';
+
+                container.innerHTML = `
+                    <div style="border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div><h1 style="font-size: 28pt; font-weight: 900; margin: 0; line-height: 1;">ATHLETE REPORT</h1><p style="font-size: 9pt; text-transform: uppercase; letter-spacing: 2px; margin: 5px 0 0 0; font-weight: 800;">KENG2026 Sports Science Management</p></div>
+                        <div style="text-align: right;"><p style="font-size: 8pt; font-weight: bold; margin:0;">ISSUED ON: <strong>${new Date().toLocaleDateString()}</strong></p></div>
+                    </div>
+
+                    <div class="report-grid report-section">
+                        <div style="border-left: 4px solid #0ea5e9; padding-left: 15px;">
+                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; color: #777; margin: 0 0 5px 0;">Primary Profile</h3>
+                            <p style="font-size: 16pt; font-weight: 900; margin: 0; color: #000;">${p.name}</p>
+                            <p style="font-size: 10pt; font-weight: bold; color: #555;">Alias: ${p.nickname || 'N/A'} • ${p.gender.toUpperCase()} • ${p.age} Yrs</p>
+                        </div>
+                        <div style="background: #f1f5f9; padding: 10px; border-radius: 8px;">
+                            <h3 style="font-size: 8pt; font-weight: 900; text-transform: uppercase; color: #64748b; margin: 0 0 5px 0;">Body Composition</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; text-align: center;">
+                                <div><span style="display:block; font-size: 7pt; color: #64748b;">Weight</span><strong style="font-size: 11pt;">${p.weight}kg</strong></div>
+                                <div><span style="display:block; font-size: 7pt; color: #64748b;">Height</span><strong style="font-size: 11pt;">${p.height}cm</strong></div>
+                                <div><span style="display:block; font-size: 7pt; color: #64748b;">BMI</span><strong style="font-size: 11pt; color: #0ea5e9;">${p.bmi}</strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${settings.metabolic ? `
+                    <div class="report-grid report-section">
+                        <div style="border: 1px solid #ddd; padding: 12px; border-radius: 10px;">
+                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; margin: 0 0 10px 0;">Nutrition Targets</h3>
+                            <div style="font-size: 9pt; line-height: 1.6;">
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Daily Protein:</span><strong>${p.protRange || '-'}</strong></div>
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Daily Carbs:</span><strong>${p.carbRange || '-'}</strong></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Total TDEE:</span><strong>${p.tdee || '-'} kcal</strong></div>
+                            </div>
+                        </div>
+                        <div style="border: 1px solid #ddd; padding: 12px; border-radius: 10px;">
+                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; margin: 0 0 10px 0;">Cardiac Overview</h3>
+                            <div style="font-size: 9pt; line-height: 1.6;">
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Resting HR:</span><strong>${p.rhr || '-'} bpm</strong></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Max HR (Est):</span><strong>${p.maxHR || '-'} bpm</strong></div>
+                            </div>
+                        </div>
+                    </div>` : ''}
+
+                    <div class="report-grid report-section">
+                        ${settings.cardiac && zonesHtml ? `<div><h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 3px; margin: 0 0 10px 0;">Training Zones</h3>${zonesHtml}</div>` : '<div></div>'}
+                        ${settings.performance && pacesHtml ? `<div>
+                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 3px; margin: 0 0 10px 0;">Running performance</h3>
+                            <div style="margin-bottom: 5px; font-size: 10pt;"><strong>VDOT Score: ${p.vdot || '-'}</strong></div>
+                            ${pacesHtml}
+                        </div>` : '<div></div>'}
+                    </div>
+
+                    ${settings.strength && historyHtml ? `
+                    <div class="report-section">
+                        <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 3px; margin: 0 0 10px 0;">Strength Progress (1-Rep Max)</h3>
+                        ${historyHtml}
+                    </div>` : ''}
+
+                    <div style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 10px;">
+                        <h3 style="font-size: 8pt; font-weight: 900; text-transform: uppercase; color: #999; margin: 0 0 5px 0;">Professional Assessment & Notes</h3>
+                        <p style="font-size: 9pt; line-height: 1.4; font-style: italic; color: #444;">${p.note || 'No additional clinical or physical notes provided for this period.'}</p>
+                    </div>
+
+                    <div style="position: absolute; bottom: 15mm; width: 180mm; border-top: 1px solid #eee; padding-top: 5px; display: flex; justify-content: space-between; font-size: 7pt; font-weight: bold; color: #aaa; text-transform: uppercase;">
+                        <span>System ID: ${p.id}</span>
+                        <span>Generated by KENG2026 Sport Science System</span>
+                    </div>
+                `;
+                window.print();
+            }
+        };
+
+        window.onload = () => App.init();
+    </script>
+</body>
+</html>
