@@ -383,7 +383,7 @@
 
             handleLogin() {
                 const p = document.getElementById('login-pass').value;
-                if (p === 'Korntawat2026') { localStorage.setItem('keng_session', 'active'); this.showMain(); }
+                if (p === 'korntawat') { localStorage.setItem('keng_session', 'active'); this.showMain(); }
                 else { this.toast("Unauthorized", "shield-off"); }
             },
 
@@ -734,7 +734,7 @@
 
                 container.innerHTML = `
                     <div style="border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end;">
-                        <div><h1 style="font-size: 28pt; font-weight: 900; margin: 0; line-height: 1;">ATHLETE REPORT</h1><p style="font-size: 9pt; text-transform: uppercase; letter-spacing: 2px; margin: 5px 0 0 0; font-weight: 800;">KENG2026 Sports Science Management</p></div>
+                        <div><h1 style="font-size: 28pt; font-weight: 900; margin: 0; line-height: 1;">REPORT</h1><p style="font-size: 9pt; text-transform: uppercase; letter-spacing: 2px; margin: 5px 0 0 0; font-weight: 800;">KENG2026 Sports Science Management</p></div>
                         <div style="text-align: right;"><p style="font-size: 8pt; font-weight: bold; margin:0;">ISSUED ON: <strong>${new Date().toLocaleDateString()}</strong></p></div>
                     </div>
 
