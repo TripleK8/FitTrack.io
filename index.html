@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KENG2026 Sport Science System (Detailed Report)</title>
+    <title>KENG2026 Sport Science System (Detailed Report + BMR)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -924,13 +924,14 @@
                     ${settings.metabolic ? `
                     <div class="report-grid report-section">
                         <div style="border: 1px solid #ddd; padding: 12px; border-radius: 10px;">
-                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; margin: 0 0 10px 0;">Nutrition Targets</h3>
+                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; margin: 0 0 10px 0;">Nutrition & Metabolism</h3>
                             <div style="font-size: 9pt; line-height: 1.6;">
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Basal Metabolic Rate (BMR):</span><strong>${p.bmr || '-'} kcal</strong></div>
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Total Energy (TDEE):</span><strong>${p.tdee || '-'} kcal</strong></div>
                                 <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Daily Protein:</span><strong>${p.protRange || '-'}</strong></div>
-                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Daily Carbs:</span><strong>${p.carbRange || '-'}</strong></div>
-                                <div style="display: flex; justify-content: space-between;"><span>Total TDEE:</span><strong>${p.tdee || '-'} kcal</strong></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Daily Carbs:</span><strong>${p.carbRange || '-'}</strong></div>
                             </div>
-                            <p class="report-detail-text">TDEE represents estimated maintenance calories. Adjust intake ±300-500 kcal for controlled weight change.</p>
+                            <p class="report-detail-text">BMR is energy burned at rest. TDEE includes activity. Eat > BMR but < TDEE for weight loss.</p>
                         </div>
                         <div style="border: 1px solid #ddd; padding: 12px; border-radius: 10px;">
                             <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; margin: 0 0 10px 0;">Cardiac Overview</h3>
