@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KENG2026 Sport Science System (Cloud + HRR)</title>
+    <title>KENG2026 Sport Science System (Cloud + Polar Zones)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -248,9 +248,12 @@
                             <div class="flex justify-between items-start mb-4">
                                 <div>
                                     <h3 class="font-bold flex items-center gap-2 text-slate-800">
-                                        <i data-lucide="heart" class="text-emerald-500"></i> Cardiac Lab (HRR)
+                                        <i data-lucide="heart" class="text-emerald-500"></i> Cardiac Lab
                                     </h3>
-                                    <p class="text-[10px] text-slate-400 font-bold uppercase">Karvonen Formula</p>
+                                    <div class="flex flex-col">
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase">Method: HRR (Karvonen)</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase">Zones: Polar (50-100%)</p>
+                                    </div>
                                 </div>
                                 <label class="report-toggle-label">
                                     <input type="checkbox" id="toggle-report-cardiac" class="report-toggle-input w-3 h-3 rounded text-sky-500" onchange="App.updateReportSettings('cardiac')">
@@ -270,7 +273,7 @@
                             </div>
 
                             <button onclick="App.calculateHR()" class="theme-btn w-full py-3 bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-xs shadow-emerald-100">
-                                Calculate HRR Zones
+                                Calculate Polar Zones
                             </button>
                             
                             <div id="res-hr-zones" class="mt-4 space-y-2 hidden animate-in slide-in-from-top-2 duration-300">
@@ -623,16 +626,16 @@
                 // 1. ดึงค่าตัวแปร
                 const a = parseInt(document.getElementById('fit-hr-age').value) || 0; // อายุ
                 const r = parseInt(document.getElementById('fit-hr-rhr').value) || 0; // Resting HR
-                const id = document.getElementById('fit-registry-select').value; // ID ผู้ป่วย (ถ้ามีการ Sync)
+                const id = document.getElementById('fit-registry-select').value; // ID ผู้ป่วย
 
-                // Validation: ต้องใส่อายุ และ RHR (ถ้าไม่ใส่ RHR สูตร Karvonen จะเพี้ยน)
+                // Validation
                 if (a <= 0) {
                     this.toast("Please enter valid Age", "alert-circle");
                     return;
                 }
+                // ถ้าไม่ได้ใส่ Resting HR ให้แจ้งเตือน (เพราะสูตร HRR จำเป็นต้องใช้)
                 if (r <= 0) {
-                    this.toast("Resting HR is required for HRR calculation", "heart-pulse");
-                    // หรือถ้าอยากให้ default เป็น 0 ก็ลบ if นี้ออก แต่ผลลัพธ์จะเป็น MaxHR ธรรมดา
+                    this.toast("Resting HR is required for Karvonen Formula", "heart-pulse");
                 }
 
                 const box = document.getElementById('res-hr-zones');
@@ -643,27 +646,27 @@
                 const mhr = 208 - (0.7 * a);
                 
                 // 3. คำนวณ Heart Rate Reserve (HRR)
-                // สูตร: HRR = MaxHR - RestingHR
                 const hrr = mhr - r;
 
-                // แสดงค่า Max HR และ HRR หัวตาราง
+                // แสดงค่าพื้นฐานหัวตาราง
                 const headerInfo = document.createElement('div');
-                headerInfo.className = "flex justify-between text-xs font-bold text-slate-500 mb-2 px-1";
-                headerInfo.innerHTML = `<span>MaxHR: ${Math.round(mhr)}</span><span>HRR: ${Math.round(hrr)}</span>`;
+                headerInfo.className = "flex justify-between text-xs font-bold text-slate-500 mb-2 px-1 border-b border-slate-100 pb-2";
+                headerInfo.innerHTML = `<span>MaxHR: ${Math.round(mhr)}</span><span>RHR: ${r}</span><span>HRR: ${Math.round(hrr)}</span>`;
                 box.appendChild(headerInfo);
 
-                // 4. กำหนด Zones (Intensity)
+                // 4. กำหนด Zones ตามมาตรฐาน Polar (ชื่อและช่วง %)
+                // อ้างอิง: https://www.polar.com/blog/running-heart-rate-zones-basics/
                 const zones = [
-                    { n: "Z1 Recovery",     min: 0.50, max: 0.60, c: "bg-slate-50 text-slate-600 border-slate-100" },
-                    { n: "Z2 Aerobic",      min: 0.60, max: 0.70, c: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-                    { n: "Z3 Tempo",        min: 0.70, max: 0.80, c: "bg-sky-50 text-sky-700 border-sky-100" },
-                    { n: "Z4 Threshold",    min: 0.80, max: 0.90, c: "bg-orange-50 text-orange-700 border-orange-100" },
-                    { n: "Z5 VO2 Max",      min: 0.90, max: 1.00, c: "bg-rose-50 text-rose-700 border-rose-100" }
+                    { n: "Z1 Very Light",   min: 0.50, max: 0.60, desc: "Warm-up / Recovery", c: "bg-slate-50 text-slate-600 border-slate-200" },
+                    { n: "Z2 Light",        min: 0.60, max: 0.70, desc: "Endurance / Fat Burn", c: "bg-sky-50 text-sky-700 border-sky-100" },
+                    { n: "Z3 Moderate",     min: 0.70, max: 0.80, desc: "Aerobic Fitness", c: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+                    { n: "Z4 Hard",         min: 0.80, max: 0.90, desc: "Speed Endurance", c: "bg-orange-50 text-orange-700 border-orange-100" },
+                    { n: "Z5 Maximum",      min: 0.90, max: 1.00, desc: "Max Performance", c: "bg-rose-50 text-rose-700 border-rose-100" }
                 ];
 
                 let savedZones = [];
 
-                // 5. วนลูปคำนวณแต่ละโซนด้วยสูตร Karvonen: Target = (HRR * %Intensity) + RHR
+                // 5. วนลูปคำนวณ (Karvonen: Target = (HRR * %) + RHR)
                 zones.forEach(z => {
                     const low = Math.round((hrr * z.min) + r);
                     const high = Math.round((hrr * z.max) + r);
@@ -674,28 +677,31 @@
                     const d = document.createElement('div');
                     d.className = `p-3 rounded-xl flex justify-between items-center font-bold text-xs border ${z.c} mb-1`;
                     d.innerHTML = `
-                        <span class="uppercase tracking-wider">${z.n}</span>
+                        <div class="flex flex-col">
+                            <span class="uppercase tracking-wider font-black">${z.n}</span>
+                            <span class="text-[9px] opacity-70 font-normal">${z.desc} (${Math.round(z.min*100)}-${Math.round(z.max*100)}%)</span>
+                        </div>
                         <span class="text-sm font-black">${rangeStr} <span class="text-[9px] opacity-70">bpm</span></span>
                     `;
                     box.appendChild(d);
                 });
 
-                // 6. บันทึกข้อมูล (ถ้ามีการเลือกผู้ป่วยจาก Registry)
+                // 6. บันทึกข้อมูล
                 if (id) {
                     const p = this.patients.find(i => i.id == id);
                     if (p) {
                         p.age = a;
                         p.rhr = r;
                         p.maxHR = Math.round(mhr);
-                        p.zones = savedZones; // บันทึกโซนที่คำนวณใหม่
+                        p.zones = savedZones;
                         
-                        // เรียกใช้ฟังก์ชันบันทึกตามระบบที่คุณใช้ (Cloud หรือ Local)
+                        // Check method การบันทึก (เผื่อใช้ version cloud หรือ local)
                         if (typeof this.savePatientToCloud === 'function') {
-                            this.savePatientToCloud(p); // กรณีใช้ Cloud
+                            this.savePatientToCloud(p);
                         } else {
-                            this.save(); // กรณีใช้ LocalStorage
+                            this.save();
                         }
-                        this.toast("HRR Zones Saved", "check-circle");
+                        this.toast("Polar Zones Saved", "check-circle");
                     }
                 }
             },
