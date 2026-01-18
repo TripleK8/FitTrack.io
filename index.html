@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KENG2026 Sport Science System (Cloud Ver.)</title>
+    <title>KENG2026 Sport Science System (Cloud + HRR)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -246,18 +246,35 @@
 
                         <div class="classic-card p-6 border-t-4 border-t-emerald-500">
                             <div class="flex justify-between items-start mb-4">
-                                <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="heart" class="text-emerald-500"></i> Cardiac Lab</h3>
+                                <div>
+                                    <h3 class="font-bold flex items-center gap-2 text-slate-800">
+                                        <i data-lucide="heart" class="text-emerald-500"></i> Cardiac Lab (HRR)
+                                    </h3>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase">Karvonen Formula</p>
+                                </div>
                                 <label class="report-toggle-label">
                                     <input type="checkbox" id="toggle-report-cardiac" class="report-toggle-input w-3 h-3 rounded text-sky-500" onchange="App.updateReportSettings('cardiac')">
                                     <span>Include in Report</span>
                                 </label>
                             </div>
+                            
                             <div class="grid grid-cols-2 gap-4 mb-4">
-                                <input type="number" id="fit-hr-age" class="clean-input text-sm" placeholder="Age">
-                                <input type="number" id="fit-hr-rhr" class="clean-input text-sm" placeholder="Rest HR">
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase">Age (ปี)</label>
+                                    <input type="number" id="fit-hr-age" class="clean-input text-sm" placeholder="ระบุอายุ">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase">Resting HR (bpm)</label>
+                                    <input type="number" id="fit-hr-rhr" class="clean-input text-sm" placeholder="ชีพจรขณะพัก">
+                                </div>
                             </div>
-                            <button onclick="App.calculateHR()" class="theme-btn w-full py-3 bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-xs">Map Zones & Save</button>
-                            <div id="res-hr-zones" class="mt-4 space-y-2 hidden"></div>
+
+                            <button onclick="App.calculateHR()" class="theme-btn w-full py-3 bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-xs shadow-emerald-100">
+                                Calculate HRR Zones
+                            </button>
+                            
+                            <div id="res-hr-zones" class="mt-4 space-y-2 hidden animate-in slide-in-from-top-2 duration-300">
+                                </div>
                         </div>
 
                         <div class="classic-card p-6 border-t-4 border-t-indigo-500">
@@ -603,22 +620,83 @@
             },
 
             calculateHR() {
-                const a = parseInt(document.getElementById('fit-hr-age').value)||0, r = parseInt(document.getElementById('fit-hr-rhr').value)||0;
-                const id = document.getElementById('fit-registry-select').value;
-                if(a<=0) return;
-                const box = document.getElementById('res-hr-zones'); box.innerHTML = ''; box.classList.remove('hidden');
-                const mhr = 208 - (0.7*a), hrr = r > 30 ? mhr-r : mhr, base = r > 30 ? r : 0;
-                const zones = [{n:"Z1 Recovery",p:[0.5,0.6],c:"bg-slate-50"},{n:"Z2 Aerobic",p:[0.6,0.7],c:"bg-emerald-50 text-emerald-700"},{n:"Z3 Tempo",p:[0.7,0.8],c:"bg-sky-50 text-sky-700"},{n:"Z4 Anaerobic",p:[0.8,0.9],c:"bg-orange-50 text-orange-700"},{n:"Z5 Maximum",p:[0.9,1.0],c:"bg-rose-50 text-rose-700"}];
+                // 1. ดึงค่าตัวแปร
+                const a = parseInt(document.getElementById('fit-hr-age').value) || 0; // อายุ
+                const r = parseInt(document.getElementById('fit-hr-rhr').value) || 0; // Resting HR
+                const id = document.getElementById('fit-registry-select').value; // ID ผู้ป่วย (ถ้ามีการ Sync)
+
+                // Validation: ต้องใส่อายุ และ RHR (ถ้าไม่ใส่ RHR สูตร Karvonen จะเพี้ยน)
+                if (a <= 0) {
+                    this.toast("Please enter valid Age", "alert-circle");
+                    return;
+                }
+                if (r <= 0) {
+                    this.toast("Resting HR is required for HRR calculation", "heart-pulse");
+                    // หรือถ้าอยากให้ default เป็น 0 ก็ลบ if นี้ออก แต่ผลลัพธ์จะเป็น MaxHR ธรรมดา
+                }
+
+                const box = document.getElementById('res-hr-zones');
+                box.innerHTML = ''; 
+                box.classList.remove('hidden');
+
+                // 2. คำนวณ Max HR (Tanaka Formula: 208 - 0.7 * age)
+                const mhr = 208 - (0.7 * a);
+                
+                // 3. คำนวณ Heart Rate Reserve (HRR)
+                // สูตร: HRR = MaxHR - RestingHR
+                const hrr = mhr - r;
+
+                // แสดงค่า Max HR และ HRR หัวตาราง
+                const headerInfo = document.createElement('div');
+                headerInfo.className = "flex justify-between text-xs font-bold text-slate-500 mb-2 px-1";
+                headerInfo.innerHTML = `<span>MaxHR: ${Math.round(mhr)}</span><span>HRR: ${Math.round(hrr)}</span>`;
+                box.appendChild(headerInfo);
+
+                // 4. กำหนด Zones (Intensity)
+                const zones = [
+                    { n: "Z1 Recovery",     min: 0.50, max: 0.60, c: "bg-slate-50 text-slate-600 border-slate-100" },
+                    { n: "Z2 Aerobic",      min: 0.60, max: 0.70, c: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+                    { n: "Z3 Tempo",        min: 0.70, max: 0.80, c: "bg-sky-50 text-sky-700 border-sky-100" },
+                    { n: "Z4 Threshold",    min: 0.80, max: 0.90, c: "bg-orange-50 text-orange-700 border-orange-100" },
+                    { n: "Z5 VO2 Max",      min: 0.90, max: 1.00, c: "bg-rose-50 text-rose-700 border-rose-100" }
+                ];
+
                 let savedZones = [];
+
+                // 5. วนลูปคำนวณแต่ละโซนด้วยสูตร Karvonen: Target = (HRR * %Intensity) + RHR
                 zones.forEach(z => {
-                    const low = Math.round(hrr*z.p[0]+base), high = Math.round(hrr*z.p[1]+base);
-                    savedZones.push({ name: z.n, range: `${low}-${high} bpm` });
-                    const d = document.createElement('div'); d.className = `p-3 rounded-xl flex justify-between font-bold text-xs ${z.c}`;
-                    d.innerHTML = `<span>${z.n}</span><span>${low}-${high} bpm</span>`; box.appendChild(d);
+                    const low = Math.round((hrr * z.min) + r);
+                    const high = Math.round((hrr * z.max) + r);
+                    
+                    const rangeStr = `${low} - ${high}`;
+                    savedZones.push({ name: z.n, range: `${rangeStr} bpm` });
+
+                    const d = document.createElement('div');
+                    d.className = `p-3 rounded-xl flex justify-between items-center font-bold text-xs border ${z.c} mb-1`;
+                    d.innerHTML = `
+                        <span class="uppercase tracking-wider">${z.n}</span>
+                        <span class="text-sm font-black">${rangeStr} <span class="text-[9px] opacity-70">bpm</span></span>
+                    `;
+                    box.appendChild(d);
                 });
+
+                // 6. บันทึกข้อมูล (ถ้ามีการเลือกผู้ป่วยจาก Registry)
                 if (id) {
                     const p = this.patients.find(i => i.id == id);
-                    if (p) { p.age = a; p.rhr = r; p.maxHR = Math.round(mhr); p.zones = savedZones; this.savePatientToCloud(p); }
+                    if (p) {
+                        p.age = a;
+                        p.rhr = r;
+                        p.maxHR = Math.round(mhr);
+                        p.zones = savedZones; // บันทึกโซนที่คำนวณใหม่
+                        
+                        // เรียกใช้ฟังก์ชันบันทึกตามระบบที่คุณใช้ (Cloud หรือ Local)
+                        if (typeof this.savePatientToCloud === 'function') {
+                            this.savePatientToCloud(p); // กรณีใช้ Cloud
+                        } else {
+                            this.save(); // กรณีใช้ LocalStorage
+                        }
+                        this.toast("HRR Zones Saved", "check-circle");
+                    }
                 }
             },
 
