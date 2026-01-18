@@ -1,168 +1,238 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KENG2026 Sport Science System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KENG2026 Sport Science System (Full Cloud)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        * { font-family: 'Prompt', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #f8fafc; overflow-x: hidden; width: 100%; }
-        
-        .hide-scroll::-webkit-scrollbar { display: none; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; transition: all 0.3s; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
         
-        /* ปุ่มสไตล์พรีเมียม */
-        .theme-btn { 
-            background-color: #0ea5e9; color: white; transition: all 0.2s; 
-            border-radius: 12px; display: inline-flex; align-items: center; 
-            justify-content: center; gap: 8px; font-weight: 600;
-        }
-        .theme-btn:active { transform: scale(0.98); }
+        .theme-btn { background-color: #0ea5e9; color: white; transition: all 0.2s; border-radius: 12px; }
+        .theme-btn:hover { background-color: #0284c7; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
+        .theme-btn:active { transform: translateY(0); }
         
         .classic-card {
             background: white; border: 1px solid #f1f5f9; border-radius: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.3s ease;
         }
-
-        /* ป้องกัน Input ตกขอบและ Zoom บน iOS */
         .clean-input {
             background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
-            padding: 0.75rem 1rem; transition: all 0.2s ease; color: #1e293b; 
-            width: 100%; font-size: 16px;
+            padding: 0.75rem 1rem; transition: all 0.2s ease; color: #1e293b; width: 100%; font-size: 16px;
         }
-        .clean-input:focus { background-color: #ffffff; border-color: #0ea5e9; outline: none; box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
-        
-        .nav-item-active { background-color: #f0f9ff; color: #0ea5e9; font-weight: 700; border-right: 4px solid #0ea5e9; }
+        .clean-input:focus { background-color: #ffffff; border-color: #0ea5e9; outline: none; ring: 3px rgba(14, 165, 233, 0.15); }
+        .sidebar-item-active { background-color: #f0f9ff; color: #0ea5e9; font-weight: 700; border-right: 4px solid #0ea5e9; }
+        .metric-badge { background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+        .guide-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 8px; display: block; }
+        .report-toggle-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .report-toggle-input:checked + span { color: #0ea5e9; }
 
         @media print {
             @page { size: A4; margin: 0; }
             body * { visibility: hidden; }
             #report-container, #report-container * { visibility: visible; }
             #report-container {
-                position: absolute; left: 0; top: 0; width: 210mm; padding: 15mm;
-                background: white; display: block !important; color: black; z-index: 9999;
+                position: absolute; left: 0; top: 0; width: 210mm; min-height: 297mm;
+                padding: 15mm; background: white; display: block !important;
+                color: black; font-family: 'Inter', sans-serif; z-index: 9999;
             }
             .no-print { display: none !important; }
-            .report-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10pt; }
-            .report-table th, .report-table td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
-            .report-table th { background-color: #f8fafc; font-weight: bold; color: #333; }
-        }
-
-        /* ปรับปรุงระบบ Modal ให้ไม่ล้นจอ */
-        .modal-content {
-            width: 95%; max-width: 500px; max-height: 90vh;
-            overflow-y: auto; border-radius: 24px;
+            .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+            .report-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 10px; }
+            .report-table th { border-bottom: 2px solid #000; text-align: left; padding: 4px; font-weight: 900; text-transform: uppercase; }
+            .report-table td { border-bottom: 1px solid #eee; padding: 4px; }
         }
     </style>
 </head>
-<body class="text-slate-600 antialiased">
+<body class="text-slate-600 antialiased overflow-hidden">
 
-    <div id="login-view" class="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-sky-500">
-        <div class="relative bg-white p-8 max-w-sm w-full rounded-[32px] shadow-2xl text-center">
-            <div class="w-16 h-16 bg-sky-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-sky-100">
-                <i data-lucide="cloud-lightning"></i>
+    <div id="login-view" class="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-sky-500 overflow-hidden">
+        <div class="relative bg-white p-10 max-w-md w-full rounded-[32px] shadow-2xl text-center">
+            <div class="w-16 h-16 bg-sky-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-sky-100 mx-auto mb-6">
+                <i data-lucide="cloud-lightning" class="w-8 h-8"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800">Cloud Login</h2>
-            <p class="text-slate-400 text-sm mt-1 mb-8">KENG2026 Sport Science</p>
+            <h2 class="text-2xl font-black text-slate-800 tracking-tighter">Cloud Access</h2>
+            <p class="text-slate-400 text-sm font-semibold uppercase tracking-widest mt-1 mb-8">KENG2026 Sports Science</p>
             <div class="space-y-4">
-                <input type="password" id="login-pass" class="clean-input text-center" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter') App.handleLogin()">
-                <button onclick="App.handleLogin()" class="theme-btn w-full py-4 shadow-xl shadow-sky-100 uppercase tracking-wider">เข้าสู่ระบบ</button>
+                <input type="password" id="login-pass" class="clean-input text-center font-bold" placeholder="Enter Password" onkeydown="if(event.key==='Enter') App.handleLogin()">
+                <button onclick="App.handleLogin()" class="theme-btn w-full py-4 font-black uppercase text-sm">Connect System</button>
             </div>
         </div>
     </div>
 
-    <div id="main-system" class="flex min-h-screen relative hidden no-print">
-        <div id="sidebar-overlay" onclick="App.toggleSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden lg:hidden"></div>
-
+    <div id="main-system" class="flex h-screen relative hidden no-print">
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-100 flex flex-col transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300">
-            <div class="p-6 flex items-center gap-3 border-b">
-                <div class="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-sky-100">
+            <div class="p-6 flex items-center gap-3 border-b border-slate-50">
+                <div class="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center text-white">
                     <i data-lucide="zap" class="w-6 h-6"></i>
                 </div>
-                <span class="font-bold text-xl tracking-tight text-slate-800">KENG<span class="text-sky-500">2026</span></span>
+                <span class="font-extrabold text-xl tracking-tighter text-slate-800">KENG<span class="text-sky-500">2026</span></span>
             </div>
-            <nav class="flex-1 p-4 space-y-1 overflow-y-auto hide-scroll">
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto hide-scroll">
                 <button onclick="App.setTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
-                    <i data-lucide="layout-grid" class="w-5 h-5"></i><span class="text-sm font-medium">แดชบอร์ด</span>
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i><span class="text-sm font-semibold">Dashboard</span>
                 </button>
                 <button onclick="App.setTab('patients')" id="nav-patients" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
-                    <i data-lucide="users" class="w-5 h-5"></i><span class="text-sm font-medium">รายชื่อคนไข้</span>
+                    <i data-lucide="users" class="w-5 h-5"></i><span class="text-sm font-semibold">Registry</span>
                 </button>
                 <button onclick="App.setTab('fitness')" id="nav-fitness" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
-                    <i data-lucide="calculator" class="w-5 h-5"></i><span class="text-sm font-medium">เครื่องมือแล็บ</span>
+                    <i data-lucide="calculator" class="w-5 h-5"></i><span class="text-sm font-semibold">Lab Tools</span>
                 </button>
                 <button onclick="App.setTab('form')" id="nav-form" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
-                    <i data-lucide="user-plus" class="w-5 h-5"></i><span class="text-sm font-medium">เพิ่มข้อมูลใหม่</span>
+                    <i data-lucide="user-plus" class="w-5 h-5"></i><span class="text-sm font-semibold">New Entry</span>
                 </button>
             </nav>
-            <div class="p-4 border-t">
-                <button onclick="App.logout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-400 hover:text-red-500 rounded-xl hover:bg-red-50">
-                    <i data-lucide="log-out" class="w-4 h-4"></i><span>ออกจากระบบ</span>
+            <div class="p-4 bg-slate-50/50 border-t border-slate-100">
+                <button onclick="App.logout()" class="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-400 hover:text-red-500">
+                    <i data-lucide="log-out" class="w-4 h-4"></i><span>Sign Out</span>
                 </button>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col min-w-0 bg-[#f8fafc]">
-            <header class="h-16 bg-white/90 backdrop-blur-md border-b flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
-                <div class="flex items-center gap-3">
+        <main class="flex-1 flex flex-col min-w-0 bg-[#f8fafc] overflow-y-auto">
+            <header class="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-6 sticky top-0 z-40">
+                <div class="flex items-center gap-4">
                     <button onclick="App.toggleSidebar()" class="lg:hidden p-2 text-slate-500"><i data-lucide="menu"></i></button>
-                    <h1 id="page-title" class="font-bold text-slate-800 text-lg">Dashboard</h1>
+                    <h1 id="page-title" class="font-bold text-slate-800 text-lg uppercase tracking-wide">Dashboard</h1>
                 </div>
                 <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span class="text-[10px] font-bold text-emerald-600 uppercase">Cloud Sync</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Connected</span>
                 </div>
             </header>
 
-            <div class="p-4 md:p-6 max-w-7xl mx-auto w-full space-y-6 overflow-x-hidden">
-                <section id="view-dashboard" class="fade-enter space-y-4 md:space-y-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div class="classic-card p-5 border-l-4 border-l-sky-500">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">จำนวนคนไข้ทั้งหมด</p>
-                            <h2 id="stat-total" class="text-3xl font-bold mt-1">0</h2>
+            <div class="p-6 max-w-7xl mx-auto w-full">
+                <section id="view-dashboard" class="fade-enter space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="classic-card p-6 border-l-4 border-l-sky-500">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Registry</p>
+                            <h2 id="stat-total" class="text-4xl font-black mt-1 text-slate-800">0</h2>
                         </div>
-                        <div class="classic-card p-5 border-l-4 border-l-emerald-500">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ค่าเฉลี่ย Max HR (bpm)</p>
-                            <h2 id="stat-avg-hr" class="text-3xl font-bold mt-1">0</h2>
+                        <div class="classic-card p-6 border-l-4 border-l-emerald-500">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Avg Max HR (bpm)</p>
+                            <h2 id="stat-avg-hr" class="text-4xl font-black mt-1 text-slate-800">0</h2>
                         </div>
-                        <div class="classic-card p-5 border-l-4 border-l-amber-500 sm:col-span-2 lg:col-span-1">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ค่าเฉลี่ย BMI (kg/m²)</p>
-                            <h2 id="stat-avg-bmi" class="text-3xl font-bold mt-1">0</h2>
+                        <div class="classic-card p-6 border-l-4 border-l-amber-500">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Avg BMI (kg/m²)</p>
+                            <h2 id="stat-avg-bmi" class="text-4xl font-black mt-1 text-slate-800">0</h2>
                         </div>
                     </div>
-                    <div class="classic-card p-5">
-                        <h3 class="font-bold mb-4 flex items-center gap-2 text-slate-800"><i data-lucide="history" class="w-4 h-4 text-sky-500"></i> รายการล่าสุด</h3>
+                    <div class="classic-card p-6">
+                        <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-sky-500"></i> Recently Added</h3>
                         <div id="recent-list" class="space-y-3"></div>
                     </div>
                 </section>
 
-                <section id="view-patients" class="hidden fade-enter space-y-4">
-                    <div class="flex flex-col sm:flex-row gap-3 items-center justify-between bg-white p-3 rounded-2xl border shadow-sm sm:bg-transparent sm:p-0 sm:border-0 sm:shadow-none">
-                        <input type="text" id="search-input" onkeyup="App.renderTable()" class="clean-input sm:max-w-xs" placeholder="ค้นหาชื่อหรือชื่อเล่น...">
-                        <button onclick="App.setTab('form')" class="theme-btn w-full sm:w-auto px-6 py-3 shadow-lg shadow-sky-100 text-sm">
-                            <i data-lucide="plus" class="w-4 h-4"></i> เพิ่มข้อมูล
-                        </button>
+                <section id="view-fitness" class="hidden fade-enter space-y-6">
+                    <div class="classic-card p-6 border-t-4 border-t-sky-500 flex flex-col md:flex-row items-center gap-4">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-slate-800">Lab Synchronization</h3>
+                            <p class="text-[10px] text-slate-400 uppercase font-black">Link stats to an entry for auto-saving</p>
+                        </div>
+                        <select id="fit-registry-select" class="clean-input text-sm md:w-72 bg-white"></select>
+                        <button onclick="App.loadFromRegistry()" class="theme-btn px-8 py-3 text-xs font-black uppercase">Sync Data</button>
                     </div>
 
-                    <div id="patient-mobile-list" class="grid grid-cols-1 gap-4 md:hidden"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="classic-card p-6 border-t-4 border-t-rose-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="dumbbell" class="text-rose-500"></i> Strength Lab (1RM)</h3>
+                                <label class="report-toggle-label"><input type="checkbox" id="toggle-report-strength" class="report-toggle-input" onchange="App.updateReportSettings('strength')"><span>Report</span></label>
+                            </div>
+                            <div class="space-y-4">
+                                <select id="fit-1rm-exercise" class="clean-input text-sm bg-white" onchange="App.toggleCustomExercise()">
+                                    <option>Back Squat</option><option>Bench Press</option><option>Deadlift</option><option value="custom">Other</option>
+                                </select>
+                                <input type="number" id="fit-1rm-weight" class="clean-input text-sm" placeholder="Load Weight (kg)">
+                                <input type="number" id="fit-1rm-reps" class="clean-input text-sm" placeholder="Reps to Failure">
+                                <button onclick="App.calculateStrength()" class="theme-btn w-full py-3 bg-rose-500 hover:bg-rose-600 font-black uppercase text-xs">Analyze Strength</button>
+                                <div id="res-1rm-box" class="hidden mt-4 p-4 bg-rose-50 rounded-2xl text-center border border-rose-100 font-black text-rose-600 text-4xl" id="res-1rm">0 kg</div>
+                            </div>
+                        </div>
 
-                    <div class="classic-card overflow-hidden hidden md:block">
+                        <div class="classic-card p-6 border-t-4 border-t-emerald-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="heart" class="text-emerald-500"></i> Cardiac Lab (Polar)</h3>
+                                    <p class="text-[9px] text-slate-400 font-black uppercase mt-1">Karvonen HRR Method</p>
+                                </div>
+                                <label class="report-toggle-label"><input type="checkbox" id="toggle-report-cardiac" class="report-toggle-input" onchange="App.updateReportSettings('cardiac')"><span>Report</span></label>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <input type="number" id="fit-hr-age" class="clean-input text-sm" placeholder="Age (Yrs)">
+                                <input type="number" id="fit-hr-rhr" class="clean-input text-sm" placeholder="Rest HR (bpm)">
+                            </div>
+                            <button onclick="App.calculateHR()" class="theme-btn w-full py-3 bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-xs">Map Polar Zones</button>
+                            <div id="res-hr-zones" class="mt-4 space-y-2 hidden"></div>
+                        </div>
+
+                        <div class="classic-card p-6 border-t-4 border-t-amber-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="utensils" class="text-amber-500"></i> Metabolic Lab</h3>
+                                <label class="report-toggle-label"><input type="checkbox" id="toggle-report-metabolic" class="report-toggle-input" onchange="App.updateReportSettings('metabolic')"><span>Report</span></label>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <input type="number" id="fit-weight" class="clean-input text-sm" placeholder="Weight (kg)">
+                                <input type="number" id="fit-height" class="clean-input text-sm" placeholder="Height (cm)">
+                                <input type="number" id="fit-age" class="clean-input text-sm" placeholder="Age (Yrs)">
+                                <select id="fit-gender" class="clean-input text-sm bg-white"><option value="male">Male</option><option value="female">Female</option></select>
+                            </div>
+                            <select id="fit-activity" class="clean-input text-xs mb-4">
+                                <option value="1.2">Sedentary (x1.2)</option>
+                                <option value="1.375">Light (x1.375)</option>
+                                <option value="1.55">Moderate (x1.55)</option>
+                                <option value="1.725">Active (x1.725)</option>
+                                <option value="1.9">Athlete (x1.9)</option>
+                            </select>
+                            <button onclick="App.calculateMetabolic()" class="theme-btn w-full py-3 bg-amber-500 hover:bg-amber-600 font-black uppercase text-xs">Analyze Metabolism</button>
+                            <div class="grid grid-cols-2 gap-4 mt-4 text-slate-800">
+                                <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100"><span class="text-[9px] font-black uppercase text-amber-500">BMR (kcal)</span><p id="res-bmr" class="text-2xl font-black">0</p></div>
+                                <div class="p-4 bg-orange-50 rounded-2xl border border-orange-100"><span class="text-[9px] font-black uppercase text-orange-500">TDEE (kcal)</span><p id="res-tdee" class="text-2xl font-black">0</p></div>
+                            </div>
+                        </div>
+
+                        <div class="classic-card p-6 border-t-4 border-t-indigo-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="timer" class="text-indigo-500"></i> Performance Lab</h3>
+                                <label class="report-toggle-label"><input type="checkbox" id="toggle-report-performance" class="report-toggle-input" onchange="App.updateReportSettings('performance')"><span>Report</span></label>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
+                                <input type="number" id="vdot-dist" class="clean-input text-sm" placeholder="KM">
+                                <input type="number" id="vdot-h" class="clean-input text-sm" placeholder="H">
+                                <input type="number" id="vdot-m" class="clean-input text-sm" placeholder="M">
+                                <input type="number" id="vdot-s" class="clean-input text-sm" placeholder="S">
+                            </div>
+                            <button onclick="App.calculateVDOT()" class="theme-btn w-full py-3 bg-indigo-500 hover:bg-indigo-600 font-black uppercase text-xs">Analyze Running Score</button>
+                            <div id="res-vdot-box" class="hidden mt-4">
+                                <div class="p-4 bg-indigo-50 rounded-2xl text-center mb-4 border border-indigo-100 font-black text-indigo-600 text-3xl" id="res-vdot">0.0</div>
+                                <div id="res-vdot-paces" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="view-patients" class="hidden fade-enter space-y-4">
+                    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                        <input type="text" id="search-input" onkeyup="App.renderTable()" class="clean-input w-full md:w-96 text-sm" placeholder="Search entry...">
+                        <button onclick="App.setTab('form')" class="theme-btn px-6 py-2.5 text-sm font-bold flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> New Entry</button>
+                    </div>
+                    <div class="classic-card overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
-                                <thead class="bg-slate-50 text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b">
+                                <thead class="bg-slate-50 border-b">
                                     <tr>
-                                        <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                        <th class="px-6 py-4">ข้อมูลพื้นฐาน</th>
-                                        <th class="px-6 py-4">สรุปดัชนี</th>
-                                        <th class="px-6 py-4 text-right">จัดการ</th>
+                                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Name</th>
+                                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Profile</th>
+                                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="patient-table-body" class="divide-y divide-slate-50"></tbody>
@@ -171,78 +241,20 @@
                     </div>
                 </section>
 
-                <section id="view-fitness" class="hidden fade-enter space-y-6">
-                    <div class="classic-card p-5 border-t-4 border-t-sky-500">
-                        <h3 class="font-bold text-slate-800 mb-2">เชื่อมโยงข้อมูล</h3>
-                        <div class="flex flex-col sm:flex-row gap-3">
-                            <select id="fit-registry-select" class="clean-input text-sm flex-1"></select>
-                            <button onclick="App.loadFromRegistry()" class="theme-btn px-8 py-3 text-sm">ซิงค์ข้อมูล</button>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="classic-card p-5 border-t-4 border-t-rose-500 space-y-4">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-bold flex items-center gap-2"><i data-lucide="dumbbell" class="text-rose-500"></i> Strength (1RM)</h3>
-                                <label class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase"><input type="checkbox" id="toggle-report-strength" onchange="App.updateReportSettings('strength')" class="w-4 h-4 text-sky-500 rounded"> พิมพ์</label>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <select id="fit-1rm-exercise" class="clean-input text-sm sm:col-span-2" onchange="App.toggleCustomExercise()">
-                                    <option>Back Squat</option><option>Bench Press</option><option>Deadlift</option><option value="custom">อื่นๆ (ระบุเอง)</option>
-                                </select>
-                                <input type="text" id="fit-1rm-custom-name" class="clean-input text-sm sm:col-span-2 hidden" placeholder="ระบุชื่อท่าออกกำลังกาย">
-                                <input type="number" id="fit-1rm-weight" class="clean-input text-sm" placeholder="น้ำหนัก (kg)">
-                                <input type="number" id="fit-1rm-reps" class="clean-input text-sm" placeholder="จำนวนครั้ง (reps)">
-                            </div>
-                            <button onclick="App.calculateStrength()" class="theme-btn w-full py-3 bg-rose-500 hover:bg-rose-600 text-sm">วิเคราะห์และบันทึก</button>
-                            <div id="res-1rm-box" class="hidden p-4 bg-rose-50 rounded-2xl text-center border border-rose-100">
-                                <p class="text-[10px] font-bold text-rose-400 uppercase">Estimated 1RM</p>
-                                <p id="res-1rm" class="text-4xl font-bold text-rose-600">0 kg</p>
-                            </div>
-                        </div>
-
-                        <div class="classic-card p-5 border-t-4 border-t-emerald-500 space-y-4">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h3 class="font-bold flex items-center gap-2"><i data-lucide="heart" class="text-emerald-500"></i> HR Zones (Polar)</h3>
-                                    <p class="text-[10px] text-slate-400 mt-1">ใช้สูตร Karvonen (HRR)</p>
-                                </div>
-                                <label class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase"><input type="checkbox" id="toggle-report-cardiac" onchange="App.updateReportSettings('cardiac')" class="w-4 h-4 text-sky-500 rounded"> พิมพ์</label>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="col-span-2 sm:col-span-1">
-                                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">อายุ (ปี)</label>
-                                    <input type="number" id="fit-hr-age" class="clean-input text-sm" placeholder="เช่น 25">
-                                </div>
-                                <div class="col-span-2 sm:col-span-1">
-                                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Rest HR (bpm)</label>
-                                    <input type="number" id="fit-hr-rhr" class="clean-input text-sm" placeholder="เช่น 60">
-                                </div>
-                            </div>
-                            <button onclick="App.calculateHR()" class="theme-btn w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-sm">คำนวณโซน (HRR Method)</button>
-                            <div id="res-hr-zones" class="space-y-2 hidden"></div>
-                        </div>
-                    </div>
-                </section>
-
                 <section id="view-form" class="hidden fade-enter">
-                    <div class="classic-card p-6 md:p-8 max-w-2xl mx-auto">
+                    <div class="classic-card p-8 lg:max-w-3xl mx-auto">
                         <form id="patient-form" onsubmit="event.preventDefault(); App.savePatient();" class="space-y-6">
                             <input type="hidden" id="p-edit-id">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="sm:col-span-2"><label class="text-xs font-bold text-slate-400 mb-1 block uppercase">ชื่อ-นามสกุล</label><input type="text" id="p-name" required class="clean-input font-bold" placeholder="ระบุชื่อจริง"></div>
-                                <div><label class="text-xs font-bold text-slate-400 mb-1 block uppercase">ชื่อเล่น</label><input type="text" id="p-nickname" class="clean-input" placeholder="ถ้ามี"></div>
-                                <div><label class="text-xs font-bold text-slate-400 mb-1 block uppercase">เพศ</label><select id="p-gender" class="clean-input bg-white"><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select></div>
-                                <div><label class="text-xs font-bold text-slate-400 mb-1 block uppercase">น้ำหนัก (kg)</label><input type="number" id="p-weight" step="0.1" class="clean-input" placeholder="0.0"></div>
-                                <div><label class="text-xs font-bold text-slate-400 mb-1 block uppercase">ส่วนสูง (cm)</label><input type="number" id="p-height" class="clean-input" placeholder="0"></div>
-                                <div><label class="text-xs font-bold text-slate-400 mb-1 block uppercase">อายุ (ปี)</label><input type="number" id="p-age" class="clean-input" placeholder="0"></div>
-                                <div><label class="text-xs font-bold text-slate-400 mb-1 block uppercase">Rest HR (bpm)</label><input type="number" id="p-rhr" class="clean-input" placeholder="0"></div>
-                                <div class="sm:col-span-2"><label class="text-xs font-bold text-slate-400 mb-1 block uppercase">หมายเหตุเพิ่มเติม</label><textarea id="p-note" rows="3" class="clean-input resize-none" placeholder="ข้อมูลสุขภาพเบื้องต้น..."></textarea></div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2"><label class="text-xs font-bold text-slate-400 mb-2 uppercase">Full Name</label><input type="text" id="p-name" required class="clean-input font-bold"></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 uppercase">Alias</label><input type="text" id="p-nickname" class="clean-input"></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 uppercase">Weight (kg)</label><input type="number" id="p-weight" step="0.1" class="clean-input"></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 uppercase">Height (cm)</label><input type="number" id="p-height" class="clean-input"></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 uppercase">Age</label><input type="number" id="p-age" class="clean-input"></div>
+                                <div><label class="text-xs font-bold text-slate-400 mb-2 uppercase">Rest HR (bpm)</label><input type="number" id="p-rhr" class="clean-input"></div>
+                                <div class="md:col-span-2"><label class="text-xs font-bold text-slate-400 mb-2 uppercase">Notes</label><textarea id="p-note" rows="3" class="clean-input resize-none"></textarea></div>
                             </div>
-                            <div class="pt-4 flex flex-col sm:flex-row gap-3">
-                                <button type="submit" class="theme-btn flex-1 py-4 text-sm shadow-lg shadow-sky-100 uppercase tracking-widest">บันทึกข้อมูลเข้า Cloud</button>
-                                <button type="button" onclick="App.setTab('patients')" class="flex-1 py-4 rounded-xl text-sm font-bold text-slate-400 hover:text-slate-600 bg-slate-50">ยกเลิก</button>
-                            </div>
+                            <div class="pt-6 flex gap-3"><button type="submit" class="theme-btn px-10 py-4 font-black uppercase text-xs">Commit to Cloud</button></div>
                         </form>
                     </div>
                 </section>
@@ -251,33 +263,16 @@
     </div>
 
     <div id="report-container" class="hidden"></div>
-    <div id="profile-modal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white modal-content p-6 shadow-2xl flex flex-col">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-slate-800">ข้อมูลส่วนตัว</h3>
-                <div class="flex gap-1">
-                    <button id="modal-print-btn" class="p-2 text-slate-400 hover:text-sky-500"><i data-lucide="printer"></i></button>
-                    <button onclick="App.closeProfileModal()" class="p-2 text-slate-400"><i data-lucide="x"></i></button>
-                </div>
-            </div>
-            <div id="profile-content" class="flex-1 space-y-4"></div>
-        </div>
-    </div>
-
-    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-4 rounded-2xl shadow-2xl translate-y-32 transition-all duration-500 flex items-center gap-4 z-[400] w-[90%] max-w-xs">
-        <div id="toast-icon" class="text-emerald-400"><i data-lucide="check-circle"></i></div>
-        <p id="toast-msg" class="text-sm font-medium"></p>
-    </div>
+    <div id="profile-modal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"><div class="bg-white p-8 max-w-lg w-full rounded-[32px] shadow-2xl flex flex-col max-h-[80vh] overflow-y-auto" id="profile-content"></div></div>
+    <div id="toast" class="fixed bottom-6 right-6 bg-white border px-6 py-4 rounded-2xl shadow-2xl translate-y-32 transition-all duration-500 flex items-center gap-4 z-[400]"><div id="toast-icon"></div><p id="toast-msg" class="text-sm font-bold"></p></div>
 
     <script>
         const App = {
             db: null,
             patients: [],
             activeTab: 'dashboard',
-            deleteId: null,
 
             async init() {
-                // Firebase Config
                 const firebaseConfig = {
                     apiKey: "AIzaSyDfsxH5h_G5qLUAMEB1RLRjpHTy-yacvvY",
                     authDomain: "fitness-1414f.firebaseapp.com",
@@ -288,17 +283,12 @@
                     measurementId: "G-MFRGX1S4QJ"
                 };
 
-                if(firebaseConfig.apiKey === "YOUR_API_KEY") {
-                    console.log("กรุณาใส่ Firebase Config ในโค้ดก่อนใช้งาน");
-                    return;
-                }
-
                 try {
                     firebase.initializeApp(firebaseConfig);
                     this.db = firebase.firestore();
                     this.db.collection("patients").orderBy("updatedAt", "desc").onSnapshot((snapshot) => {
                         this.patients = [];
-                        snapshot.forEach((doc) => { this.patients.push(doc.data()); });
+                        snapshot.forEach((doc) => this.patients.push(doc.data()));
                         this.refreshUI();
                     });
                     lucide.createIcons();
@@ -312,304 +302,177 @@
                 if(this.activeTab === 'fitness') this.populateSync();
             },
 
-            handleLogin() {
-                const p = document.getElementById('login-pass').value;
-                if (p === 'korntawat') { localStorage.setItem('keng_session', 'active'); this.showMain(); }
-                else { this.toast("รหัสผ่านไม่ถูกต้อง", "shield-off"); }
-            },
+            // --- Calculation Engine (VDOT, BMR, TDEE, HRR) ---
 
-            showMain() {
-                document.getElementById('login-view').classList.add('hidden');
-                document.getElementById('main-system').classList.remove('hidden');
-                this.setTab('dashboard');
-            },
-
-            logout() { localStorage.removeItem('keng_session'); location.reload(); },
-
-            setTab(t) {
-                this.activeTab = t;
-                document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-                document.getElementById(`view-${t}`).classList.remove('hidden');
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('nav-item-active'));
-                const nav = document.getElementById(`nav-${t}`); if(nav) nav.classList.add('nav-item-active');
+            calculateMetabolic() {
+                const w = parseFloat(document.getElementById('fit-weight').value)||0, 
+                      h = parseFloat(document.getElementById('fit-height').value)||0, 
+                      a = parseInt(document.getElementById('fit-age').value)||0, 
+                      g = document.getElementById('fit-gender').value, 
+                      act = parseFloat(document.getElementById('fit-activity').value);
                 
-                const titles = { 'dashboard': 'แดชบอร์ด', 'patients': 'รายชื่อคนไข้', 'fitness': 'เครื่องมือแล็บ', 'form': 'จัดการข้อมูล' };
-                document.getElementById('page-title').innerText = titles[t] || 'Dashboard';
+                if(w<=0||h<=0||a<=0) return;
                 
-                this.refreshUI();
-                if (window.innerWidth < 1024) this.toggleSidebar(false);
-                lucide.createIcons();
-            },
-
-            toggleSidebar(force) {
-                const s = document.getElementById('sidebar');
-                const o = document.getElementById('sidebar-overlay');
-                const isHidden = s.classList.contains('-translate-x-full');
-                const nextState = force !== undefined ? force : isHidden;
+                // Mifflin-St Jeor Equation
+                const bmr = (10*w) + (6.25*h) - (5*a) + (g === 'male' ? 5 : -161);
+                const tdee = bmr * act;
                 
-                if (nextState) { s.classList.remove('-translate-x-full'); o.classList.remove('hidden'); } 
-                else { s.classList.add('-translate-x-full'); o.classList.add('hidden'); }
-            },
+                document.getElementById('res-bmr').innerText = Math.round(bmr);
+                document.getElementById('res-tdee').innerText = Math.round(tdee);
 
-            async savePatient() {
-                const id = document.getElementById('p-edit-id').value;
-                const n = document.getElementById('p-name').value;
-                if(!n) return;
-                
-                const docId = id ? id : Date.now().toString();
-                const w = parseFloat(document.getElementById('p-weight').value)||0;
-                const h = parseFloat(document.getElementById('p-height').value)||0;
-                const a = parseInt(document.getElementById('p-age').value)||0;
-
-                const data = {
-                    id: parseInt(docId),
-                    name: n,
-                    nickname: document.getElementById('p-nickname').value,
-                    gender: document.getElementById('p-gender').value,
-                    weight: w, height: h, age: a,
-                    rhr: parseInt(document.getElementById('p-rhr').value)||0,
-                    note: document.getElementById('p-note').value,
-                    bmi: (w>0&&h>0)?(w/((h/100)**2)).toFixed(1):'0.0',
-                    maxHR: a>0?(208-0.7*a).toFixed(0):'0',
-                    updatedAt: Date.now()
-                };
-
-                try {
-                    await this.db.collection("patients").doc(docId).set(data, { merge: true });
-                    this.toast("บันทึกข้อมูลเรียบร้อย", "cloud-upload");
-                    this.resetForm();
-                    this.setTab('patients');
-                } catch(e) { this.toast("บันทึกผิดพลาด", "alert-circle"); }
-            },
-
-            // --- Lab Calculations ---
-            calculateStrength() {
-                const w = parseFloat(document.getElementById('fit-1rm-weight').value) || 0;
-                const r = parseInt(document.getElementById('fit-1rm-reps').value) || 0;
-                let ex = document.getElementById('fit-1rm-exercise').value;
-                if (ex === 'custom') ex = document.getElementById('fit-1rm-custom-name').value.trim() || 'Custom';
-                if(w <= 0 || r <= 0) return;
-                const max = (w * (1 + r/30)).toFixed(1);
-                document.getElementById('res-1rm').innerText = `${max} kg`;
-                document.getElementById('res-1rm-box').classList.remove('hidden');
-                
                 const id = document.getElementById('fit-registry-select').value;
                 if(id) {
-                    const p = this.patients.find(i => i.id == id);
-                    if(p) {
-                        const recs = p.records ? [...p.records] : [];
-                        recs.push({ date: new Date().toISOString(), exercise: ex, weight: w, reps: r, oneRM: max });
-                        this.db.collection("patients").doc(id).update({ records: recs });
-                        this.toast("บันทึกสถิติ Strength แล้ว", "check");
-                    }
+                    this.updatePatientData(id, { 
+                        weight: w, height: h, age: a, gender: g, 
+                        activityLevel: act, bmr: Math.round(bmr), tdee: Math.round(tdee) 
+                    });
                 }
+                this.toast("Metabolism Analyzed", "utensils");
             },
 
-            calculateHR() {
-                // สูตร Karvonen (HR Reserve)
-                // Target HR = ((MaxHR - RestHR) * %Intensity) + RestHR
-                const a = parseInt(document.getElementById('fit-hr-age').value)||0;
-                const r = parseInt(document.getElementById('fit-hr-rhr').value)||0;
+            calculateVDOT() {
+                const d = parseFloat(document.getElementById('vdot-dist').value), 
+                      h = parseInt(document.getElementById('vdot-h').value)||0, 
+                      m = parseInt(document.getElementById('vdot-m').value)||0, 
+                      s = parseInt(document.getElementById('vdot-s').value)||0;
                 
-                if(a<=0) { this.toast("กรุณาระบุอายุ", "alert-circle"); return; }
-                if(r<=0) { this.toast("กรุณาระบุ Rest HR เพื่อใช้สูตร HRR", "alert-circle"); return; }
-
-                const box = document.getElementById('res-hr-zones'); box.innerHTML = ''; box.classList.remove('hidden');
+                const t = (h*60)+m+(s/60); 
+                if(!d || t<=0) return;
                 
-                const mhr = 208 - (0.7*a); // Tanaka Formula
-                const hrr = mhr - r; // Heart Rate Reserve
+                const v = (d*1000)/t, 
+                      cost = 0.182258*v + 0.000104*Math.pow(v,2) - 4.60, 
+                      pct = 0.8 + 0.1894393*Math.exp(-0.012778*t) + 0.2989558*Math.exp(-0.1932605*t), 
+                      vdot = cost/pct;
+                
+                document.getElementById('res-vdot-box').classList.remove('hidden');
+                document.getElementById('res-vdot').innerText = vdot.toFixed(1);
 
-                // Polar Zones Definition
-                const zones = [
-                    {n:"Zone 1 (Very Light)", p:[0.5,0.6], c:"bg-gray-50 text-gray-600", desc:"วอร์มอัพ/ฟื้นฟู (Warm up)"},
-                    {n:"Zone 2 (Light)", p:[0.6,0.7], c:"bg-sky-50 text-sky-600", desc:"เผาผลาญไขมัน (Fat Burn)"},
-                    {n:"Zone 3 (Moderate)", p:[0.7,0.8], c:"bg-emerald-50 text-emerald-600", desc:"แอโรบิก (Aerobic Fitness)"},
-                    {n:"Zone 4 (Hard)", p:[0.8,0.9], c:"bg-orange-50 text-orange-600", desc:"เพิ่มความทนทาน (Anaerobic)"},
-                    {n:"Zone 5 (Maximum)", p:[0.9,1.0], c:"bg-rose-50 text-rose-600", desc:"ขีดจำกัดสูงสุด (VO2 Max)"}
-                ];
+                // Target Paces Logic
+                const pBox = document.getElementById('res-vdot-paces'); pBox.innerHTML = '';
+                const types = [{n:"Easy",p:0.7}, {n:"Threshold",p:0.88}, {n:"Interval",p:0.98}];
+                let savedPaces = [];
 
-                let saved = [];
-                zones.forEach(z => {
-                    const low = Math.round((hrr * z.p[0]) + r);
-                    const high = Math.round((hrr * z.p[1]) + r);
-                    saved.push({ name: z.n, range: `${low}-${high} bpm` });
-                    box.innerHTML += `
-                        <div class="p-3 rounded-xl flex flex-col justify-center border border-slate-100 ${z.c}">
-                            <div class="flex justify-between items-center font-bold">
-                                <span>${z.n}</span>
-                                <span class="text-sm">${low}-${high} bpm</span>
-                            </div>
-                            <span class="text-[10px] opacity-80 font-normal mt-1">${z.desc}</span>
-                        </div>`;
+                types.forEach(type => {
+                    const tv = vdot*type.p, a_q = 0.000104, b_q = 0.182258, c_q = -(4.60 + tv);
+                    const vr = (-b_q + Math.sqrt(Math.pow(b_q,2) - 4*a_q*c_q)) / (2*a_q), pm = 1000/vr;
+                    const pStr = `${Math.floor(pm)}:${Math.round((pm%1)*60).toString().padStart(2,'0')}/km`;
+                    savedPaces.push({ name: type.n, pace: pStr });
+                    pBox.innerHTML += `<div class="flex justify-between p-2 text-[11px] font-bold border-b"><span>${type.n}</span><span>${pStr}</span></div>`;
                 });
 
                 const id = document.getElementById('fit-registry-select').value;
-                if(id) {
-                    this.db.collection("patients").doc(id).update({ 
-                        age: a, 
-                        rhr: r, 
-                        maxHR: Math.round(mhr), 
-                        zones: saved 
-                    });
-                    this.toast("บันทึกข้อมูล Polar Zones แล้ว", "heart");
-                }
+                if(id) this.updatePatientData(id, { vdot: vdot.toFixed(1), paces: savedPaces });
+                this.toast("VDOT Score Saved", "timer");
             },
 
-            // --- UI Rendering ---
+            calculateHR() {
+                const a = parseInt(document.getElementById('fit-hr-age').value)||0, 
+                      r = parseInt(document.getElementById('fit-hr-rhr').value)||0;
+                if(a <= 0 || r <= 0) return;
+                
+                const box = document.getElementById('res-hr-zones'); box.innerHTML = ''; box.classList.remove('hidden');
+                const mhr = 208 - (0.7 * a); 
+                const hrr = mhr - r;
+
+                const polarZones = [
+                    {n:"Zone 1 (Very Light)", p:[0.5,0.6], c:"bg-slate-50 text-slate-600", d:"Warm-up"},
+                    {n:"Zone 2 (Light)", p:[0.6,0.7], c:"bg-sky-50 text-sky-700", d:"Fat Burn"},
+                    {n:"Zone 3 (Moderate)", p:[0.7,0.8], c:"bg-emerald-50 text-emerald-700", d:"Aerobic"},
+                    {n:"Zone 4 (Hard)", p:[0.8,0.9], c:"bg-orange-50 text-orange-700", d:"Anaerobic"},
+                    {n:"Zone 5 (Maximum)", p:[0.9,1.0], c:"bg-rose-50 text-rose-700", d:"VO2 Max"}
+                ];
+
+                let savedZones = [];
+                polarZones.forEach(z => {
+                    const low = Math.round((hrr * z.p[0]) + r), high = Math.round((hrr * z.p[1]) + r);
+                    savedZones.push({ name: z.n, range: `${low}-${high} bpm` });
+                    box.innerHTML += `<div class="p-2 rounded-xl flex flex-col ${z.c} border"><div class="flex justify-between font-bold text-xs"><span>${z.n}</span><span>${low}-${high}</span></div></div>`;
+                });
+
+                const id = document.getElementById('fit-registry-select').value;
+                if(id) this.updatePatientData(id, { age: a, rhr: r, maxHR: Math.round(mhr), zones: savedZones });
+                this.toast("Polar Zones Ready", "heart");
+            },
+
+            calculateStrength() {
+                const w = parseFloat(document.getElementById('fit-1rm-weight').value)||0, r = parseInt(document.getElementById('fit-1rm-reps').value)||0;
+                if(w<=0 || r<=0) return;
+                const max = (w * (1 + r/30)).toFixed(1);
+                document.getElementById('res-1rm-box').classList.remove('hidden');
+                document.getElementById('res-1rm-box').innerText = `${max} kg`;
+                
+                const id = document.getElementById('fit-registry-select').value, ex = document.getElementById('fit-1rm-exercise').value;
+                if(id) {
+                    const p = this.patients.find(i => i.id == id);
+                    const newRecords = p.records ? [...p.records] : [];
+                    newRecords.push({ date: new Date().toISOString(), exercise: ex, weight: w, reps: r, oneRM: max });
+                    this.updatePatientData(id, { records: newRecords });
+                }
+                this.toast("Strength Logged", "dumbbell");
+            },
+
+            // --- Registry & Form Ops ---
+
+            async savePatient() {
+                const id = document.getElementById('p-edit-id').value || Date.now().toString(),
+                      n = document.getElementById('p-name').value;
+                const data = {
+                    id: parseInt(id), name: n, nickname: document.getElementById('p-nickname').value,
+                    weight: parseFloat(document.getElementById('p-weight').value)||0,
+                    height: parseFloat(document.getElementById('p-height').value)||0,
+                    age: parseInt(document.getElementById('p-age').value)||0,
+                    rhr: parseInt(document.getElementById('p-rhr').value)||0,
+                    note: document.getElementById('p-note').value,
+                    bmi: (parseFloat(document.getElementById('p-weight').value) / ((parseFloat(document.getElementById('p-height').value)/100)**2)).toFixed(1),
+                    updatedAt: Date.now()
+                };
+                await this.db.collection("patients").doc(id).set(data, { merge: true });
+                this.toast("Entry Saved", "cloud"); this.resetForm(); this.setTab('patients');
+            },
+
+            // --- Nav & Helpers ---
+
             updateDash() {
-                const bmis = this.patients.map(p => parseFloat(p.bmi)).filter(v => !isNaN(v));
-                const hrs = this.patients.map(p => parseInt(p.maxHR)).filter(v => !isNaN(v));
                 document.getElementById('stat-total').innerText = this.patients.length;
+                const bmis = this.patients.map(p => parseFloat(p.bmi)).filter(v => !isNaN(v));
                 document.getElementById('stat-avg-bmi').innerText = bmis.length ? (bmis.reduce((a,b)=>a+b,0)/bmis.length).toFixed(1) : "0";
-                document.getElementById('stat-avg-hr').innerText = hrs.length ? Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length) : "0";
                 const list = document.getElementById('recent-list'); list.innerHTML = '';
                 this.patients.slice(0,3).forEach(p => {
-                    list.innerHTML += `<div class="flex justify-between p-4 bg-slate-50 rounded-xl items-center border"><div><p class="font-bold text-slate-800 text-sm">${p.name}</p><p class="text-[10px] text-slate-400 font-bold uppercase">${p.nickname || 'ไม่มีชื่อเล่น'}</p></div><span class="px-3 py-1 bg-white border rounded-lg text-xs font-bold text-sky-600">BMI ${p.bmi}</span></div>`;
+                    list.innerHTML += `<div class="flex justify-between p-3 bg-slate-50 rounded-xl border"><span>${p.name}</span><span class="metric-badge">BMI ${p.bmi}</span></div>`;
                 });
             },
 
             renderTable() {
-                const tbody = document.getElementById('patient-table-body');
-                const mList = document.getElementById('patient-mobile-list');
-                const s = document.getElementById('search-input').value.toLowerCase();
-                tbody.innerHTML = ''; mList.innerHTML = '';
-                
-                const filtered = this.patients.filter(p => p.name.toLowerCase().includes(s) || (p.nickname && p.nickname.toLowerCase().includes(s)));
-                
-                filtered.forEach(p => {
-                    const latest = p.records?.length ? p.records[p.records.length-1] : null;
-                    
-                    // Desktop
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-6 py-4 font-bold text-sm text-slate-800">${p.name}<p class="text-[10px] text-slate-400 font-bold">${p.nickname || ''}</p></td>
-                            <td class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">${p.gender} • ${p.age} ปี</td>
-                            <td class="px-6 py-4"><div class="flex gap-2"><span class="px-2 py-1 bg-sky-50 text-sky-600 rounded-md text-[10px] font-bold">BMI ${p.bmi}</span>${latest ? `<span class="px-2 py-1 bg-rose-50 text-rose-600 rounded-md text-[10px] font-bold">1RM ${latest.oneRM}kg</span>` : ''}</div></td>
-                            <td class="px-6 py-4 text-right space-x-1">
-                                <button onclick="App.viewProfile('${p.id}')" class="p-2 text-slate-300 hover:text-emerald-500"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                                <button onclick="App.printReport('${p.id}')" class="p-2 text-slate-300 hover:text-indigo-500"><i data-lucide="printer" class="w-4 h-4"></i></button>
-                                <button onclick="App.editPatient('${p.id}')" class="p-2 text-slate-300 hover:text-sky-500"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                            </td>
-                        </tr>`;
-                    
-                    // Mobile
-                    mList.innerHTML += `
-                        <div class="bg-white p-5 rounded-2xl border shadow-sm space-y-4">
-                            <div class="flex justify-between items-start">
-                                <div><h4 class="font-bold text-slate-800">${p.name}</h4><p class="text-xs text-slate-400 font-bold uppercase">${p.nickname || 'ไม่มีชื่อเล่น'}</p></div>
-                                <span class="px-2 py-1 bg-sky-50 text-sky-600 rounded-md text-[10px] font-bold">BMI ${p.bmi}</span>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2 border-t pt-3">
-                                <button onclick="App.viewProfile('${p.id}')" class="flex flex-col items-center gap-1 py-2 bg-slate-50 rounded-xl text-slate-500"><i data-lucide="eye" class="w-4 h-4"></i><span class="text-[9px] font-bold">ดูโปรไฟล์</span></button>
-                                <button onclick="App.printReport('${p.id}')" class="flex flex-col items-center gap-1 py-2 bg-slate-50 rounded-xl text-slate-500"><i data-lucide="printer" class="w-4 h-4"></i><span class="text-[9px] font-bold">พิมพ์ PDF</span></button>
-                                <button onclick="App.editPatient('${p.id}')" class="flex flex-col items-center gap-1 py-2 bg-slate-50 rounded-xl text-slate-500"><i data-lucide="edit-3" class="w-4 h-4"></i><span class="text-[9px] font-bold">แก้ไข</span></button>
-                            </div>
-                        </div>`;
+                const tbody = document.getElementById('patient-table-body'); tbody.innerHTML = '';
+                this.patients.forEach(p => {
+                    tbody.innerHTML += `<tr class="border-b"><td class="px-6 py-4 font-bold text-slate-800">${p.name}</td><td class="px-6 py-4 text-xs font-bold">${p.age}Y • BMI ${p.bmi}</td><td class="px-6 py-4 text-right"><button onclick="App.printReport(${p.id})" class="p-2 text-sky-500"><i data-lucide="printer"></i></button></td></tr>`;
                 });
                 lucide.createIcons();
             },
 
             populateSync() {
-                const sel = document.getElementById('fit-registry-select'); 
-                sel.innerHTML = '<option value="">เลือกคนไข้จากระบบ...</option>';
-                this.patients.forEach(p => { sel.innerHTML += `<option value="${p.id}">${p.name} (${p.nickname || 'ไม่มีชื่อเล่น'})</option>`; });
+                const sel = document.getElementById('fit-registry-select'); sel.innerHTML = '<option value="">Select Registry...</option>';
+                this.patients.forEach(p => sel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
             },
 
             loadFromRegistry() {
-                const id = document.getElementById('fit-registry-select').value; if(!id) return;
-                const p = this.patients.find(i => i.id == id);
+                const id = document.getElementById('fit-registry-select').value; const p = this.patients.find(i => i.id == id);
                 if(p) {
-                    ['fit-weight','fit-height','fit-age','fit-hr-age','fit-hr-rhr'].forEach(el => {
-                        const input = document.getElementById(el);
-                        if(input) input.value = p[el.split('-')[1]] || p.age || '';
-                    });
-                    document.getElementById('fit-gender').value = p.gender || 'ชาย';
-                    this.toast(`ซิงค์ข้อมูล ${p.name} สำเร็จ`, "refresh-cw");
+                    document.getElementById('fit-weight').value = p.weight; document.getElementById('fit-height').value = p.height;
+                    document.getElementById('fit-age').value = p.age; document.getElementById('fit-hr-age').value = p.age;
+                    document.getElementById('fit-hr-rhr').value = p.rhr; this.toast("Synced", "refresh-cw");
                 }
             },
 
-            viewProfile(id) {
-                const p = this.patients.find(i => i.id == id); if(!p) return;
-                const content = document.getElementById('profile-content');
-                document.getElementById('modal-print-btn').onclick = () => App.printReport(id);
-                content.innerHTML = `
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border">
-                            <div class="w-14 h-14 bg-sky-500 text-white rounded-2xl flex items-center justify-center font-bold text-2xl">${p.name[0]}</div>
-                            <div><h4 class="font-bold text-slate-800">${p.name}</h4><p class="text-xs font-bold text-slate-400 uppercase">${p.nickname || '-'} • ${p.gender} • ${p.age} ปี</p></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3 text-center">
-                            <div class="bg-white border rounded-2xl p-3"><p class="text-[9px] font-bold text-slate-400 uppercase">Weight</p><p class="text-xl font-bold">${p.weight} kg</p></div>
-                            <div class="bg-white border rounded-2xl p-3"><p class="text-[9px] font-bold text-slate-400 uppercase">Height</p><p class="text-xl font-bold">${p.height} cm</p></div>
-                            <div class="bg-sky-50 border border-sky-100 rounded-2xl p-3 col-span-2"><p class="text-[9px] font-bold text-sky-400 uppercase">Body Mass Index (BMI)</p><p class="text-2xl font-bold text-sky-600">${p.bmi}</p></div>
-                        </div>
-                        <div><p class="text-[10px] font-bold text-slate-400 uppercase mb-2">หมายเหตุ</p><p class="text-sm p-4 bg-slate-50 rounded-xl border italic">${p.note || 'ไม่มีข้อมูลเพิ่มเติม'}</p></div>
-                    </div>`;
-                document.getElementById('profile-modal').classList.replace('hidden', 'flex');
-                lucide.createIcons();
-            },
-
-            printReport(id) {
-                const p = this.patients.find(i => i.id == id); if (!p) return;
-                const settings = p.reportSettings || { strength: true, cardiac: true };
-                const container = document.getElementById('report-container');
-                
-                const zonesHtml = p.zones?.length ? `
-                    <table class="report-table">
-                        <thead><tr><th>Polar Zone</th><th style="text-align:right">Range (bpm)</th></tr></thead>
-                        <tbody>${p.zones.map(z => `<tr><td>${z.name}</td><td style="text-align:right">${z.range}</td></tr>`).join('')}</tbody>
-                    </table>` : '<p style="font-size: 10pt; color:#999;">- No HR Zone Data -</p>';
-                
-                const recordsHtml = p.records?.length ? `
-                    <table class="report-table">
-                        <thead><tr><th>Date</th><th>ท่า</th><th>โหลด (Weight x Reps)</th><th style="text-align:right">1RM Est.</th></tr></thead>
-                        <tbody>${p.records.slice().reverse().map(r => `<tr><td>${new Date(r.date).toLocaleDateString('th-TH')}</td><td>${r.exercise}</td><td>${r.weight}kg x ${r.reps}</td><td style="text-align:right">${r.oneRM} kg</td></tr>`).join('')}</tbody>
-                    </table>` : '<p style="font-size: 10pt; color:#999;">- No Strength Data -</p>';
-
-                container.innerHTML = `
-                    <div style="border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
-                        <div><h1 style="font-size: 24pt; font-weight: 700; margin: 0;">SPORT SCIENCE REPORT</h1><p style="font-size: 10pt; color: #666; margin: 5px 0 0 0;">KENG2026 Management System</p></div>
-                        <div style="text-align: right;"><p style="font-size: 8pt; margin: 0;">Issue Date: <strong>${new Date().toLocaleDateString('th-TH')}</strong></p></div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                        <div style="background: #f8fafc; padding: 15px; border-radius: 10px;">
-                            <p style="font-size: 8pt; color: #888; margin: 0;">Name:</p><p style="font-size: 14pt; font-weight: 700; margin: 0;">${p.name}</p>
-                            <p style="font-size: 9pt; font-weight: 600; margin: 5px 0 0 0;">Nickname: ${p.nickname || '-'} • ${p.age} Years • ${p.gender}</p>
-                        </div>
-                        <div style="border: 1px solid #eee; padding: 15px; border-radius: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center;">
-                            <div><span style="font-size: 7pt; color: #888; display: block;">Weight</span><strong>${p.weight} kg</strong></div>
-                            <div><span style="font-size: 7pt; color: #888; display: block;">Height</span><strong>${p.height} cm</strong></div>
-                            <div><span style="font-size: 7pt; color: #888; display: block;">BMI</span><strong style="color: #0ea5e9;">${p.bmi}</strong></div>
-                        </div>
-                    </div>
-                    ${settings.cardiac ? `<div style="margin-bottom: 20px;"><h3>Heart Rate Zones (Polar / Karvonen Formula)</h3><p style="font-size:9pt; color:#666;">Rest HR: ${p.rhr} bpm | Max HR: ${p.maxHR} bpm</p>${zonesHtml}</div>` : ''}
-                    ${settings.strength ? `<div><h3>Strength Progress (1-Rep Max)</h3>${recordsHtml}</div>` : ''}
-                    <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; font-size: 8pt; color: #999;">
-                        Note: ${p.note || '-'}
-                        <div style="margin-top: 40px; text-align: center; color: #ccc;">--- Generated by KENG2026 Cloud System ---</div>
-                    </div>`;
-
-                // เปลี่ยนชื่อไฟล์สำหรับพิมพ์
-                const originalTitle = document.title;
-                const dateStr = new Date().toLocaleDateString('th-TH').replace(/\//g, '-');
-                document.title = `${p.name}_${dateStr}`;
-                window.print();
-                document.title = originalTitle;
-            },
-
-            closeProfileModal() { document.getElementById('profile-modal').classList.replace('flex', 'hidden'); },
-            editPatient(id) {
-                const p = this.patients.find(i => i.id == id);
-                if(p) {
-                    ['p-name', 'p-nickname', 'p-weight', 'p-height', 'p-age', 'p-rhr', 'p-note'].forEach(el => document.getElementById(el).value = p[el.split('-')[1]] || '');
-                    document.getElementById('p-gender').value = p.gender; document.getElementById('p-edit-id').value = p.id; this.setTab('form');
-                }
-            },
+            async updatePatientData(id, newData) { await this.db.collection("patients").doc(String(id)).update(newData); },
+            handleLogin() { if (document.getElementById('login-pass').value === 'korntawat') { localStorage.setItem('keng_session', 'active'); this.showMain(); } else this.toast("Error", "shield-off"); },
+            showMain() { document.getElementById('login-view').classList.add('hidden'); document.getElementById('main-system').classList.remove('hidden'); this.setTab('dashboard'); },
+            logout() { localStorage.removeItem('keng_session'); location.reload(); },
+            setTab(t) { this.activeTab = t; document.querySelectorAll('section').forEach(s => s.classList.add('hidden')); document.getElementById(`view-${t}`).classList.remove('hidden'); this.refreshUI(); lucide.createIcons(); },
+            toast(m, i) { const t = document.getElementById('toast'); document.getElementById('toast-msg').innerText = m; document.getElementById('toast-icon').innerHTML = `<i data-lucide="${i}"></i>`; lucide.createIcons(); t.classList.remove('translate-y-32'); setTimeout(() => t.classList.add('translate-y-32'), 3000); },
             resetForm() { document.getElementById('patient-form').reset(); document.getElementById('p-edit-id').value = ''; },
-            toggleCustomExercise() { const isCustom = document.getElementById('fit-1rm-exercise').value === 'custom'; document.getElementById('fit-1rm-custom-name').classList.toggle('hidden', !isCustom); },
-            toast(m, i) { const t = document.getElementById('toast'); document.getElementById('toast-msg').innerText = m; document.getElementById('toast-icon').innerHTML = `<i data-lucide="${i}"></i>`; lucide.createIcons(); t.classList.remove('translate-y-32'); setTimeout(() => t.classList.add('translate-y-32'), 3000); }
+            toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
         };
-
         window.onload = () => App.init();
     </script>
 </body>
