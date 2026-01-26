@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KENG2026 Sport Science System (Detailed Report + BMR)</title>
+    <title>KENG2026 Sport Science System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -37,91 +37,110 @@
             background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;
         }
         
+        .formula-text { font-family: monospace; font-size: 10px; color: #94a3b8; display: block; margin-top: 4px; }
         .guide-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 8px; display: block; }
 
+        /* Report Toggle Styles */
         .report-toggle-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; display: flex; align-items: center; gap: 6px; cursor: pointer; }
         .report-toggle-input:checked + span { color: #0ea5e9; }
 
+        /* Print Styles for A4 Report */
         @media print {
             @page { size: A4; margin: 0; }
             body * { visibility: hidden; }
             #report-container, #report-container * { visibility: visible; }
             #report-container {
-                position: absolute; left: 0; top: 0; width: 210mm; min-height: 297mm;
-                padding: 15mm; background: white; display: block !important;
-                color: black; font-family: 'Inter', sans-serif; z-index: 9999;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 210mm;
+                min-height: 297mm;
+                padding: 15mm;
+                background: white;
+                display: block !important;
+                color: black;
+                font-family: 'Inter', sans-serif;
+                z-index: 9999;
             }
             .no-print { display: none !important; }
+            .print-break { page-break-inside: avoid; }
+            
             .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
             .report-section { margin-bottom: 20px; }
             .report-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
             .report-table th { border-bottom: 2px solid #000; text-align: left; padding: 4px; font-weight: 900; text-transform: uppercase; }
             .report-table td { border-bottom: 1px solid #eee; padding: 4px; }
-            .report-detail-text { font-size: 8pt; color: #555; line-height: 1.4; margin-top: 5px; font-style: italic; }
         }
     </style>
 </head>
 <body class="text-slate-600 antialiased overflow-hidden">
 
+    <!-- Login View -->
     <div id="login-view" class="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-sky-500 overflow-hidden">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
         <div class="relative bg-white p-10 max-w-md w-full rounded-[32px] shadow-2xl animate-in zoom-in-95 duration-500 text-center">
             <div class="w-16 h-16 bg-sky-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-sky-100 mx-auto mb-6">
-                <i data-lucide="cloud-lightning" class="w-8 h-8"></i>
+                <i data-lucide="shield-check" class="w-8 h-8"></i>
             </div>
-            <h2 class="text-2xl font-black text-slate-800 tracking-tighter">Cloud Access</h2>
-            <p class="text-slate-400 text-sm font-semibold uppercase tracking-widest mt-1 mb-8">KENG2026 Sport Science</p>
+            <h2 class="text-2xl font-black text-slate-800 tracking-tighter">System Access</h2>
+            <p class="text-slate-400 text-sm font-semibold uppercase tracking-widest mt-1 mb-8">KENG2026 Sports Science</p>
             <div class="space-y-4">
                 <input type="password" id="login-pass" class="clean-input text-center font-bold" placeholder="Enter Password" onkeydown="if(event.key==='Enter') App.handleLogin()">
-                <button onclick="App.handleLogin()" class="theme-btn w-full py-4 font-black uppercase text-sm shadow-xl shadow-sky-100">Unlock Database</button>
+                <button onclick="App.handleLogin()" class="theme-btn w-full py-4 font-black uppercase text-sm shadow-xl shadow-sky-100">Unlock System</button>
             </div>
         </div>
     </div>
 
+    <!-- Main App Container -->
     <div id="main-system" class="flex h-screen relative hidden no-print">
+        <!-- Mobile Sidebar Overlay -->
         <div id="sidebar-overlay" onclick="App.toggleSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden lg:hidden"></div>
 
+        <!-- Sidebar -->
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-100 flex flex-col transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300">
             <div class="p-6 flex items-center gap-3 border-b border-slate-50">
                 <div class="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-sky-100">
                     <i data-lucide="zap" class="w-6 h-6"></i>
                 </div>
-                <span class="font-extrabold text-xl tracking-tighter text-slate-800">KENG<span class="text-sky-500">Cloud</span></span>
+                <span class="font-extrabold text-xl tracking-tighter text-slate-800">KENG<span class="text-sky-500">2026</span></span>
             </div>
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto hide-scroll">
                 <button onclick="App.setTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
-                    <i data-lucide="layout-grid" class="w-5 h-5"></i><span class="text-sm font-semibold">Dashboard</span>
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                    <span class="text-sm font-semibold">Dashboard</span>
                 </button>
                 <button onclick="App.setTab('patients')" id="nav-patients" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
-                    <i data-lucide="users" class="w-5 h-5"></i><span class="text-sm font-semibold">Registry</span>
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="text-sm font-semibold">Registry</span>
                 </button>
                 <button onclick="App.setTab('fitness')" id="nav-fitness" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
-                    <i data-lucide="calculator" class="w-5 h-5"></i><span class="text-sm font-semibold">Lab Tools</span>
+                    <i data-lucide="calculator" class="w-5 h-5"></i>
+                    <span class="text-sm font-semibold">Lab Tools</span>
                 </button>
                 <button onclick="App.setTab('form')" id="nav-form" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
-                    <i data-lucide="user-plus" class="w-5 h-5"></i><span class="text-sm font-semibold">New Entry</span>
+                    <i data-lucide="user-plus" class="w-5 h-5"></i>
+                    <span class="text-sm font-semibold">New Entry</span>
                 </button>
             </nav>
             <div class="p-4 bg-slate-50/50 border-t border-slate-100">
                 <button onclick="App.logout()" class="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-400 hover:text-red-500 transition-all">
-                    <i data-lucide="log-out" class="w-4 h-4"></i><span>Sign Out</span>
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span>Sign Out</span>
                 </button>
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="flex-1 flex flex-col min-w-0 bg-[#f8fafc] overflow-y-auto">
             <header class="h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-6 sticky top-0 z-40">
                 <div class="flex items-center gap-4">
                     <button onclick="App.toggleSidebar()" class="lg:hidden p-2 text-slate-500"><i data-lucide="menu"></i></button>
                     <h1 id="page-title" class="font-bold text-slate-800 text-lg uppercase tracking-wide">Dashboard</h1>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Firestore Connected</span>
-                </div>
             </header>
 
             <div class="p-6 max-w-7xl mx-auto w-full text-slate-700">
+                <!-- Dashboard Section -->
                 <section id="view-dashboard" class="fade-enter space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-slate-800">
                         <div class="classic-card p-6 border-l-4 border-l-sky-500">
@@ -143,6 +162,7 @@
                     </div>
                 </section>
 
+                <!-- Registry Section -->
                 <section id="view-patients" class="hidden fade-enter space-y-4">
                     <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
                         <input type="text" id="search-input" onkeyup="App.renderTable()" class="clean-input w-full md:w-96 text-sm" placeholder="Search by name or alias...">
@@ -163,13 +183,14 @@
                             </table>
                         </div>
                         <div id="empty-state" class="py-20 text-center hidden">
-                            <div class="animate-spin w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                            <p class="text-slate-400 text-sm font-medium">Fetching Cloud Data...</p>
+                            <p class="text-slate-400 text-sm font-medium">No entries found</p>
                         </div>
                     </div>
                 </section>
 
+                <!-- Lab Tools Section -->
                 <section id="view-fitness" class="hidden fade-enter space-y-6">
+                    <!-- Sync Card -->
                     <div class="classic-card p-6 border-t-4 border-t-sky-500 flex flex-col md:flex-row items-center gap-4">
                         <div class="flex-1">
                             <h3 class="font-bold text-slate-800">Registry Sync</h3>
@@ -180,6 +201,7 @@
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Strength Lab -->
                         <div class="classic-card p-6 border-t-4 border-t-rose-500">
                             <div class="flex justify-between items-start mb-4">
                                 <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="dumbbell" class="text-rose-500"></i> Strength Lab (1RM)</h3>
@@ -200,6 +222,12 @@
                                     <input type="number" id="fit-1rm-weight" class="clean-input text-sm" placeholder="Weight (kg)">
                                     <input type="number" id="fit-1rm-reps" class="clean-input text-sm" placeholder="Reps">
                                 </div>
+                                <!-- New Time Fields -->
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div><label class="text-[10px] font-black text-slate-400 uppercase block mb-1">Hours</label><input type="number" id="fit-1rm-h" class="clean-input text-sm" placeholder="H"></div>
+                                    <div><label class="text-[10px] font-black text-slate-400 uppercase block mb-1">Minutes</label><input type="number" id="fit-1rm-m" class="clean-input text-sm" placeholder="M"></div>
+                                    <div><label class="text-[10px] font-black text-slate-400 uppercase block mb-1">Seconds</label><input type="number" id="fit-1rm-s" class="clean-input text-sm" placeholder="S"></div>
+                                </div>
                                 <button onclick="App.calculateStrength()" class="theme-btn w-full py-3 bg-rose-500 hover:bg-rose-600 font-black uppercase tracking-widest text-xs">Analyze & Save Record</button>
                                 
                                 <div id="res-1rm-box" class="hidden mt-4">
@@ -217,6 +245,7 @@
                             </div>
                         </div>
 
+                        <!-- Metabolic Lab -->
                         <div class="classic-card p-6 border-t-4 border-t-amber-500">
                             <div class="flex justify-between items-start mb-4">
                                 <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="utensils" class="text-amber-500"></i> Metabolic Lab</h3>
@@ -245,42 +274,24 @@
                             </div>
                         </div>
 
+                        <!-- Cardiac Lab -->
                         <div class="classic-card p-6 border-t-4 border-t-emerald-500">
                             <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 class="font-bold flex items-center gap-2 text-slate-800">
-                                        <i data-lucide="heart" class="text-emerald-500"></i> Cardiac Lab
-                                    </h3>
-                                    <div class="flex flex-col">
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase">Method: HRR (Karvonen)</p>
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase">Zones: Polar (50-100%)</p>
-                                    </div>
-                                </div>
+                                <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="heart" class="text-emerald-500"></i> Cardiac Lab</h3>
                                 <label class="report-toggle-label">
                                     <input type="checkbox" id="toggle-report-cardiac" class="report-toggle-input w-3 h-3 rounded text-sky-500" onchange="App.updateReportSettings('cardiac')">
                                     <span>Include in Report</span>
                                 </label>
                             </div>
-                            
                             <div class="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="text-[10px] font-bold text-slate-400 uppercase">Age (ปี)</label>
-                                    <input type="number" id="fit-hr-age" class="clean-input text-sm" placeholder="ระบุอายุ">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-bold text-slate-400 uppercase">Resting HR (bpm)</label>
-                                    <input type="number" id="fit-hr-rhr" class="clean-input text-sm" placeholder="ชีพจรขณะพัก">
-                                </div>
+                                <input type="number" id="fit-hr-age" class="clean-input text-sm" placeholder="Age">
+                                <input type="number" id="fit-hr-rhr" class="clean-input text-sm" placeholder="Rest HR">
                             </div>
-
-                            <button onclick="App.calculateHR()" class="theme-btn w-full py-3 bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-xs shadow-emerald-100">
-                                Calculate Polar Zones
-                            </button>
-                            
-                            <div id="res-hr-zones" class="mt-4 space-y-2 hidden animate-in slide-in-from-top-2 duration-300">
-                                </div>
+                            <button onclick="App.calculateHR()" class="theme-btn w-full py-3 bg-emerald-500 hover:bg-emerald-600 font-black uppercase text-xs">Map Zones & Save</button>
+                            <div id="res-hr-zones" class="mt-4 space-y-2 hidden"></div>
                         </div>
 
+                        <!-- Performance Lab -->
                         <div class="classic-card p-6 border-t-4 border-t-indigo-500">
                             <div class="flex justify-between items-start mb-4">
                                 <h3 class="font-bold flex items-center gap-2 text-slate-800"><i data-lucide="timer" class="text-indigo-500"></i> Performance Lab</h3>
@@ -304,6 +315,7 @@
                     </div>
                 </section>
 
+                <!-- Entry Form Section -->
                 <section id="view-form" class="hidden fade-enter">
                     <div class="classic-card p-8 lg:max-w-3xl mx-auto">
                         <form id="patient-form" onsubmit="event.preventDefault(); App.savePatient();" class="space-y-6">
@@ -326,8 +338,10 @@
         </main>
     </div>
 
+    <!-- Hidden Report Container (A4 Size) -->
     <div id="report-container" class="hidden"></div>
 
+    <!-- History Modal -->
     <div id="history-modal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
         <div class="bg-white p-8 max-w-lg w-full rounded-[32px] shadow-2xl flex flex-col max-h-[80vh]">
             <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-slate-800">Strength History</h3><button onclick="App.closeHistory()" class="p-2 text-slate-400"><i data-lucide="x"></i></button></div>
@@ -335,6 +349,7 @@
         </div>
     </div>
 
+    <!-- Profile View Modal -->
     <div id="profile-modal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
         <div class="bg-white p-8 max-w-lg w-full rounded-[32px] shadow-2xl flex flex-col max-h-[80vh]">
             <div class="flex justify-between items-center mb-6">
@@ -344,13 +359,16 @@
                     <button onclick="App.closeProfileModal()" class="p-2 text-slate-400 hover:text-slate-600 transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
             </div>
-            <div id="profile-content" class="flex-1 overflow-y-auto space-y-4 hide-scroll"></div>
+            <div id="profile-content" class="flex-1 overflow-y-auto space-y-4 hide-scroll">
+                <!-- Content injected via JS -->
+            </div>
         </div>
     </div>
 
+    <!-- Delete Modal -->
     <div id="delete-modal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
         <div class="bg-white p-8 max-w-sm w-full rounded-3xl shadow-2xl text-center">
-            <h3 class="text-lg font-bold text-slate-800 mb-6">Delete from Cloud?</h3>
+            <h3 class="text-lg font-bold text-slate-800 mb-6">Confirm Deletion?</h3>
             <div class="flex gap-3"><button onclick="App.closeDeleteModal()" class="flex-1 px-4 py-3 font-bold text-slate-500 bg-slate-100 rounded-xl">Cancel</button><button onclick="App.confirmDelete()" class="flex-1 px-4 py-3 font-bold text-white bg-red-500 rounded-xl">Delete</button></div>
         </div>
     </div>
@@ -360,81 +378,31 @@
         <p id="toast-msg" class="text-sm font-bold text-slate-800"></p>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDfsxH5h_G5qLUAMEB1RLRjpHTy-yacvvY",
-            authDomain: "fitness-1414f.firebaseapp.com",
-            projectId: "fitness-1414f",
-            storageBucket: "fitness-1414f.firebasestorage.app",
-            messagingSenderId: "778205778078",
-            appId: "1:778205778078:web:c4af1300f1611ad9576b8f",
-            measurementId: "G-MFRGX1S4QJ"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
+    <script>
         const App = {
-            patients: [], isLoggedIn: false, activeTab: 'dashboard', deleteId: null,
+            db: 'keng2026_db_v1', patients: [], isLoggedIn: false, activeTab: 'dashboard', deleteId: null,
             
-            async init() {
-                lucide.createIcons();
+            init() {
+                this.load(); lucide.createIcons();
                 if (localStorage.getItem('keng_session') === 'active') this.showMain();
             },
 
             handleLogin() {
                 const p = document.getElementById('login-pass').value;
-                if (p === 'korntawat') { 
-                    localStorage.setItem('keng_session', 'active'); 
-                    this.showMain(); 
-                } else { 
-                    this.toast("Unauthorized", "shield-off"); 
-                }
+                if (p === 'Korntawat2026') { localStorage.setItem('keng_session', 'active'); this.showMain(); }
+                else { this.toast("Unauthorized", "shield-off"); }
             },
 
-            async showMain() {
+            showMain() {
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('main-system').classList.remove('hidden');
-                this.toast("Connecting to Cloud...", "cloud");
-                await this.load(); // Fetch from Cloud
                 this.setTab('dashboard');
-                lucide.createIcons();
             },
 
             logout() { localStorage.removeItem('keng_session'); location.reload(); },
 
-            // --- FIREBASE FUNCTIONS ---
-            async load() {
-                try {
-                    const querySnapshot = await getDocs(collection(db, "patients"));
-                    this.patients = [];
-                    querySnapshot.forEach((doc) => {
-                        this.patients.push(doc.data());
-                    });
-                    this.toast("Cloud Data Synced", "check-circle");
-                } catch (e) {
-                    console.error("Error loading documents: ", e);
-                    this.toast("Error loading data", "alert-triangle");
-                }
-            },
-
-            async save() {
-                // Not used in bulk anymore, we save individually now
-            },
-
-            async savePatientToCloud(patientData) {
-                try {
-                    await setDoc(doc(db, "patients", String(patientData.id)), patientData);
-                    this.toast("Saved to Cloud", "cloud");
-                } catch (e) {
-                    console.error("Error adding document: ", e);
-                    this.toast("Save Failed", "x-circle");
-                }
-            },
-            // --------------------------
+            load() { const s = localStorage.getItem(this.db); this.patients = s ? JSON.parse(s) : []; },
+            save() { localStorage.setItem(this.db, JSON.stringify(this.patients)); },
 
             setTab(t) {
                 this.activeTab = t;
@@ -460,9 +428,7 @@
                 document.getElementById('stat-avg-bmi').innerText = bmis.length ? (bmis.reduce((a,b)=>a+b,0)/bmis.length).toFixed(1) : "0";
                 document.getElementById('stat-avg-hr').innerText = hrs.length ? Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length) : "0";
                 const list = document.getElementById('recent-list'); list.innerHTML = '';
-                // Sort by ID assuming ID is timestamp
-                const sorted = [...this.patients].sort((a,b) => b.id - a.id);
-                sorted.slice(0, 3).forEach(p => {
+                this.patients.slice(-3).reverse().forEach(p => {
                     const d = document.createElement('div'); d.className = "flex justify-between p-3 bg-slate-50 rounded-xl items-center border border-slate-100";
                     d.innerHTML = `<span class="font-bold text-sm text-slate-700">${p.name}</span><span class="metric-badge">BMI ${p.bmi}</span>`;
                     list.appendChild(d);
@@ -473,17 +439,9 @@
                 const tbody = document.getElementById('patient-table-body');
                 const s = document.getElementById('search-input').value.toLowerCase();
                 tbody.innerHTML = '';
-                if(this.patients.length === 0) {
-                     document.getElementById('empty-state').classList.remove('hidden');
-                     document.querySelector('#empty-state p').innerText = "No entries found in cloud";
-                     document.querySelector('.animate-spin').classList.add('hidden');
-                     return;
-                }
                 const filtered = this.patients.filter(p => p.name.toLowerCase().includes(s) || (p.nickname && p.nickname.toLowerCase().includes(s)));
-                if(filtered.length === 0) { 
-                    document.getElementById('empty-state').classList.remove('hidden');
-                    document.querySelector('.animate-spin').classList.add('hidden');
-                } else {
+                if(filtered.length === 0) document.getElementById('empty-state').classList.remove('hidden');
+                else {
                     document.getElementById('empty-state').classList.add('hidden');
                     filtered.forEach(p => {
                         const tr = document.createElement('tr');
@@ -528,6 +486,9 @@
                     
                     document.getElementById('fit-1rm-weight').value = '';
                     document.getElementById('fit-1rm-reps').value = '';
+                    document.getElementById('fit-1rm-h').value = '';
+                    document.getElementById('fit-1rm-m').value = '';
+                    document.getElementById('fit-1rm-s').value = '';
                     document.getElementById('fit-1rm-exercise').value = 'Back Squat';
                     document.getElementById('fit-1rm-custom-name').classList.add('hidden');
                     document.getElementById('fit-1rm-custom-name').value = '';
@@ -544,12 +505,13 @@
             },
 
             updateReportSettings(tool) {
-                const id = document.getElementById('fit-registry-select').value; if (!id) return;
+                const id = document.getElementById('fit-registry-select').value;
+                if (!id) return;
                 const p = this.patients.find(i => i.id == id);
                 if (p) {
                     if (!p.reportSettings) p.reportSettings = { strength: true, metabolic: true, cardiac: true, performance: true };
                     p.reportSettings[tool] = document.getElementById(`toggle-report-${tool}`).checked;
-                    this.savePatientToCloud(p);
+                    this.save();
                 }
             },
 
@@ -567,6 +529,10 @@
             calculateStrength() {
                 const w = parseFloat(document.getElementById('fit-1rm-weight').value) || 0;
                 const r = parseInt(document.getElementById('fit-1rm-reps').value) || 0;
+                const h = parseInt(document.getElementById('fit-1rm-h').value) || 0;
+                const m = parseInt(document.getElementById('fit-1rm-m').value) || 0;
+                const s = parseInt(document.getElementById('fit-1rm-s').value) || 0;
+                
                 let ex = document.getElementById('fit-1rm-exercise').value;
                 if (ex === 'custom') {
                     ex = document.getElementById('fit-1rm-custom-name').value.trim() || 'Custom Exercise';
@@ -589,8 +555,10 @@
                     const p = this.patients.find(i => i.id == id);
                     if(p) { 
                         if(!p.records) p.records = []; 
-                        p.records.push({ date: new Date().toISOString(), exercise: ex, weight: w, reps: r, oneRM: max }); 
-                        this.savePatientToCloud(p); // Cloud Save
+                        const timeStr = (h > 0 || m > 0 || s > 0) ? `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : null;
+                        p.records.push({ date: new Date().toISOString(), exercise: ex, weight: w, reps: r, oneRM: max, duration: timeStr }); 
+                        this.save(); 
+                        this.toast("Strength Record Saved", "check"); 
                     }
                 }
             },
@@ -618,92 +586,28 @@
                         p.bmi = (w / ((h/100)**2)).toFixed(1);
                         p.bmr = Math.round(bmr); p.tdee = Math.round(tdee);
                         p.protRange = protRange; p.carbRange = carbRange;
-                        this.savePatientToCloud(p); // Cloud Save
+                        this.save(); this.toast("Metabolic Stats Saved", "check-circle");
                     }
                 }
             },
 
             calculateHR() {
-                // 1. ดึงค่าตัวแปร
-                const a = parseInt(document.getElementById('fit-hr-age').value) || 0; // อายุ
-                const r = parseInt(document.getElementById('fit-hr-rhr').value) || 0; // Resting HR
-                const id = document.getElementById('fit-registry-select').value; // ID ผู้ป่วย
-
-                // Validation
-                if (a <= 0) {
-                    this.toast("Please enter valid Age", "alert-circle");
-                    return;
-                }
-                // ถ้าไม่ได้ใส่ Resting HR ให้แจ้งเตือน (เพราะสูตร HRR จำเป็นต้องใช้)
-                if (r <= 0) {
-                    this.toast("Resting HR is required for Karvonen Formula", "heart-pulse");
-                }
-
-                const box = document.getElementById('res-hr-zones');
-                box.innerHTML = ''; 
-                box.classList.remove('hidden');
-
-                // 2. คำนวณ Max HR (Tanaka Formula: 208 - 0.7 * age)
-                const mhr = 208 - (0.7 * a);
-                
-                // 3. คำนวณ Heart Rate Reserve (HRR)
-                const hrr = mhr - r;
-
-                // แสดงค่าพื้นฐานหัวตาราง
-                const headerInfo = document.createElement('div');
-                headerInfo.className = "flex justify-between text-xs font-bold text-slate-500 mb-2 px-1 border-b border-slate-100 pb-2";
-                headerInfo.innerHTML = `<span>MaxHR: ${Math.round(mhr)}</span><span>RHR: ${r}</span><span>HRR: ${Math.round(hrr)}</span>`;
-                box.appendChild(headerInfo);
-
-                // 4. กำหนด Zones ตามมาตรฐาน Polar (ชื่อและช่วง %)
-                // อ้างอิง: https://www.polar.com/blog/running-heart-rate-zones-basics/
-                const zones = [
-                    { n: "Z1 Very Light",   min: 0.50, max: 0.60, desc: "Warm-up / Recovery", c: "bg-slate-50 text-slate-600 border-slate-200" },
-                    { n: "Z2 Light",        min: 0.60, max: 0.70, desc: "Endurance / Fat Burn", c: "bg-sky-50 text-sky-700 border-sky-100" },
-                    { n: "Z3 Moderate",     min: 0.70, max: 0.80, desc: "Aerobic Fitness", c: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-                    { n: "Z4 Hard",         min: 0.80, max: 0.90, desc: "Speed Endurance", c: "bg-orange-50 text-orange-700 border-orange-100" },
-                    { n: "Z5 Maximum",      min: 0.90, max: 1.00, desc: "Max Performance", c: "bg-rose-50 text-rose-700 border-rose-100" }
-                ];
-
+                const a = parseInt(document.getElementById('fit-hr-age').value)||0, r = parseInt(document.getElementById('fit-hr-rhr').value)||0;
+                const id = document.getElementById('fit-registry-select').value;
+                if(a<=0) return;
+                const box = document.getElementById('res-hr-zones'); box.innerHTML = ''; box.classList.remove('hidden');
+                const mhr = 208 - (0.7*a), hrr = r > 30 ? mhr-r : mhr, base = r > 30 ? r : 0;
+                const zones = [{n:"Z1 Recovery",p:[0.5,0.6],c:"bg-slate-50"},{n:"Z2 Aerobic",p:[0.6,0.7],c:"bg-emerald-50 text-emerald-700"},{n:"Z3 Tempo",p:[0.7,0.8],c:"bg-sky-50 text-sky-700"},{n:"Z4 Anaerobic",p:[0.8,0.9],c:"bg-orange-50 text-orange-700"},{n:"Z5 Maximum",p:[0.9,1.0],c:"bg-rose-50 text-rose-700"}];
                 let savedZones = [];
-
-                // 5. วนลูปคำนวณ (Karvonen: Target = (HRR * %) + RHR)
                 zones.forEach(z => {
-                    const low = Math.round((hrr * z.min) + r);
-                    const high = Math.round((hrr * z.max) + r);
-                    
-                    const rangeStr = `${low} - ${high}`;
-                    savedZones.push({ name: z.n, range: `${rangeStr} bpm` });
-
-                    const d = document.createElement('div');
-                    d.className = `p-3 rounded-xl flex justify-between items-center font-bold text-xs border ${z.c} mb-1`;
-                    d.innerHTML = `
-                        <div class="flex flex-col">
-                            <span class="uppercase tracking-wider font-black">${z.n}</span>
-                            <span class="text-[9px] opacity-70 font-normal">${z.desc} (${Math.round(z.min*100)}-${Math.round(z.max*100)}%)</span>
-                        </div>
-                        <span class="text-sm font-black">${rangeStr} <span class="text-[9px] opacity-70">bpm</span></span>
-                    `;
-                    box.appendChild(d);
+                    const low = Math.round(hrr*z.p[0]+base), high = Math.round(hrr*z.p[1]+base);
+                    savedZones.push({ name: z.n, range: `${low}-${high} bpm` });
+                    const d = document.createElement('div'); d.className = `p-3 rounded-xl flex justify-between font-bold text-xs ${z.c}`;
+                    d.innerHTML = `<span>${z.n}</span><span>${low}-${high} bpm</span>`; box.appendChild(d);
                 });
-
-                // 6. บันทึกข้อมูล
                 if (id) {
                     const p = this.patients.find(i => i.id == id);
-                    if (p) {
-                        p.age = a;
-                        p.rhr = r;
-                        p.maxHR = Math.round(mhr);
-                        p.zones = savedZones;
-                        
-                        // Check method การบันทึก (เผื่อใช้ version cloud หรือ local)
-                        if (typeof this.savePatientToCloud === 'function') {
-                            this.savePatientToCloud(p);
-                        } else {
-                            this.save();
-                        }
-                        this.toast("Polar Zones Saved", "check-circle");
-                    }
+                    if (p) { p.age = a; p.rhr = r; p.maxHR = Math.round(mhr); p.zones = savedZones; this.save(); this.toast("Cardiac Stats Saved", "check-circle"); }
                 }
             },
 
@@ -725,7 +629,7 @@
                 });
                 if (id) {
                     const p = this.patients.find(i => i.id == id);
-                    if (p) { p.vdot = vdot.toFixed(1); p.paces = savedPaces; this.savePatientToCloud(p); }
+                    if (p) { p.vdot = vdot.toFixed(1); p.paces = savedPaces; this.save(); this.toast("VDOT Data Saved", "check-circle"); }
                 }
             },
 
@@ -733,30 +637,15 @@
                 const id = document.getElementById('p-edit-id').value;
                 const w = parseFloat(document.getElementById('p-weight').value)||0, h = parseFloat(document.getElementById('p-height').value)||0, a = parseInt(document.getElementById('p-age').value)||0, n = document.getElementById('p-name').value;
                 if(!n) return;
-                
-                // If editing, find existing object. If new, empty object.
                 const existing = id ? this.patients.find(i => i.id == id) : {};
-                
                 const data = {
                     ...existing,
-                    id: id ? parseInt(id) : Date.now(), 
-                    name: n, nickname: document.getElementById('p-nickname').value, gender: document.getElementById('p-gender').value,
+                    id: id ? parseInt(id) : Date.now(), name: n, nickname: document.getElementById('p-nickname').value, gender: document.getElementById('p-gender').value,
                     weight: w, height: h, age: a, rhr: parseInt(document.getElementById('p-rhr').value)||0, note: document.getElementById('p-note').value,
                     bmi: (w>0&&h>0)?(w/((h/100)**2)).toFixed(1):'0.0', maxHR: a>0?(208-0.7*a).toFixed(0):'0'
                 };
-
-                // Update Local State for speed
-                if(id) { 
-                    const idx = this.patients.findIndex(i => i.id == id); 
-                    this.patients[idx] = data; 
-                } else { 
-                    this.patients.push(data); 
-                }
-
-                // Save to Cloud
-                this.savePatientToCloud(data);
-                
-                this.resetForm(); this.setTab('patients');
+                if(id) { const idx = this.patients.findIndex(i => i.id == id); this.patients[idx] = data; } else this.patients.push(data);
+                this.save(); this.toast("Registry Updated", "check-circle"); this.resetForm(); this.setTab('patients');
             },
 
             viewHistory(id) {
@@ -766,7 +655,7 @@
                 else {
                     p.records.slice().reverse().forEach((r, idx) => {
                         const div = document.createElement('div'); div.className = "p-4 bg-slate-50 rounded-2xl flex justify-between items-center border border-slate-100";
-                        div.innerHTML = `<div><p class="text-[10px] font-black text-rose-500 uppercase tracking-widest">${r.exercise}</p><p class="text-lg font-black text-slate-800">${r.oneRM} kg</p><p class="text-[9px] text-slate-400 font-bold">${r.date ? new Date(r.date).toLocaleDateString() : 'N/A'}</p></div><button onclick="App.delRecord(${id}, ${p.records.length-1-idx})" class="p-2 text-slate-300 hover:text-red-500 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+                        div.innerHTML = `<div><p class="text-[10px] font-black text-rose-500 uppercase tracking-widest">${r.exercise}</p><p class="text-lg font-black text-slate-800">${r.oneRM} kg</p><p class="text-[9px] text-slate-400 font-bold">${r.weight}kg x ${r.reps} reps ${r.duration ? `• [${r.duration}]` : ''} • ${r.date ? new Date(r.date).toLocaleDateString() : 'N/A'}</p></div><button onclick="App.delRecord(${id}, ${p.records.length-1-idx})" class="p-2 text-slate-300 hover:text-red-500 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
                         content.appendChild(div);
                     });
                 }
@@ -832,32 +721,11 @@
             },
 
             closeProfileModal() { document.getElementById('profile-modal').classList.replace('flex', 'hidden'); },
-            
-            delRecord(pid, ridx) { 
-                const p = this.patients.find(i => i.id == pid); 
-                if(p && p.records) { 
-                    p.records.splice(ridx, 1); 
-                    this.savePatientToCloud(p); // Cloud Save 
-                    this.viewHistory(pid); 
-                    this.renderTable(); 
-                } 
-            },
-            
+            delRecord(pid, ridx) { const p = this.patients.find(i => i.id == pid); if(p && p.records) { p.records.splice(ridx, 1); this.save(); this.viewHistory(pid); this.renderTable(); } },
             closeHistory() { document.getElementById('history-modal').classList.replace('flex', 'hidden'); },
             openDelete(id) { this.deleteId = id; document.getElementById('delete-modal').classList.replace('hidden', 'flex'); },
             closeDeleteModal() { document.getElementById('delete-modal').classList.replace('flex', 'hidden'); },
-            
-            async confirmDelete() { 
-                try {
-                    await deleteDoc(doc(db, "patients", String(this.deleteId)));
-                    this.patients = this.patients.filter(p => p.id !== this.deleteId); 
-                    this.renderTable(); 
-                    this.closeDeleteModal(); 
-                    this.toast("Deleted from Cloud", "trash");
-                } catch(e) {
-                    this.toast("Delete failed", "x-circle");
-                }
-            },
+            confirmDelete() { this.patients = this.patients.filter(p => p.id !== this.deleteId); this.save(); this.renderTable(); this.closeDeleteModal(); },
             
             editPatient(id) {
                 const p = this.patients.find(i => i.id == id);
@@ -879,25 +747,13 @@
                 const settings = p.reportSettings || { strength: true, metabolic: true, cardiac: true, performance: true };
                 const container = document.getElementById('report-container');
                 
-                // Helper Logic for Interpretations
-                const getBmiStatus = (b) => {
-                    const bmi = parseFloat(b);
-                    if (bmi < 18.5) return { t: "Underweight", c: "color: #eab308;" };
-                    if (bmi < 24.9) return { t: "Normal Weight", c: "color: #22c55e;" };
-                    if (bmi < 29.9) return { t: "Overweight", c: "color: #f97316;" };
-                    return { t: "Obese", c: "color: #ef4444;" };
-                };
-                const bmiStat = getBmiStatus(p.bmi);
-
-                let historyHtml = (settings.strength && p.records?.length) ? `<table class="report-table"><thead><tr><th>Date</th><th>Exercise</th><th>Load</th><th style="text-align:right">1RM</th></tr></thead><tbody>${p.records.slice().reverse().map(r => `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.exercise}</td><td>${r.weight}kg x ${r.reps}</td><td style="text-align:right">${r.oneRM} kg</td></tr>`).join('')}</tbody></table>` : '';
-                
+                let historyHtml = (settings.strength && p.records?.length) ? `<table class="report-table"><thead><tr><th>Date</th><th>Exercise</th><th>Load</th><th style="text-align:center">Time</th><th style="text-align:right">1RM</th></tr></thead><tbody>${p.records.slice().reverse().map(r => `<tr><td>${new Date(r.date).toLocaleDateString()}</td><td>${r.exercise}</td><td>${r.weight}kg x ${r.reps}</td><td style="text-align:center">${r.duration || '-'}</td><td style="text-align:right">${r.oneRM} kg</td></tr>`).join('')}</tbody></table>` : '';
                 let zonesHtml = (settings.cardiac && p.zones?.length) ? `<table class="report-table"><thead><tr><th>Zone</th><th style="text-align:right">Intensity</th></tr></thead><tbody>${p.zones.map(z => `<tr><td>${z.name}</td><td style="text-align:right">${z.range}</td></tr>`).join('')}</tbody></table>` : '';
-                
                 let pacesHtml = (settings.performance && p.paces?.length) ? `<table class="report-table"><thead><tr><th>Pace Type</th><th style="text-align:right">Min/KM</th></tr></thead><tbody>${p.paces.map(pc => `<tr><td>${pc.name}</td><td style="text-align:right">${pc.pace}</td></tr>`).join('')}</tbody></table>` : '';
 
                 container.innerHTML = `
                     <div style="border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end;">
-                        <div><h1 style="font-size: 28pt; font-weight: 900; margin: 0; line-height: 1;">REPORT</h1><p style="font-size: 9pt; text-transform: uppercase; letter-spacing: 2px; margin: 5px 0 0 0; font-weight: 800;">KENG2026 Sport Science Management</p></div>
+                        <div><h1 style="font-size: 28pt; font-weight: 900; margin: 0; line-height: 1;">ATHLETE REPORT</h1><p style="font-size: 9pt; text-transform: uppercase; letter-spacing: 2px; margin: 5px 0 0 0; font-weight: 800;">KENG2026 Sports Science Management</p></div>
                         <div style="text-align: right;"><p style="font-size: 8pt; font-weight: bold; margin:0;">ISSUED ON: <strong>${new Date().toLocaleDateString()}</strong></p></div>
                     </div>
 
@@ -908,30 +764,24 @@
                             <p style="font-size: 10pt; font-weight: bold; color: #555;">Alias: ${p.nickname || 'N/A'} • ${p.gender.toUpperCase()} • ${p.age} Yrs</p>
                         </div>
                         <div style="background: #f1f5f9; padding: 10px; border-radius: 8px;">
-                            <h3 style="font-size: 8pt; font-weight: 900; text-transform: uppercase; color: #64748b; margin: 0 0 5px 0;">Body Composition Analysis</h3>
+                            <h3 style="font-size: 8pt; font-weight: 900; text-transform: uppercase; color: #64748b; margin: 0 0 5px 0;">Body Composition</h3>
                             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; text-align: center;">
                                 <div><span style="display:block; font-size: 7pt; color: #64748b;">Weight</span><strong style="font-size: 11pt;">${p.weight}kg</strong></div>
                                 <div><span style="display:block; font-size: 7pt; color: #64748b;">Height</span><strong style="font-size: 11pt;">${p.height}cm</strong></div>
                                 <div><span style="display:block; font-size: 7pt; color: #64748b;">BMI</span><strong style="font-size: 11pt; color: #0ea5e9;">${p.bmi}</strong></div>
                             </div>
-                            <p class="report-detail-text">
-                                Subject is categorized as <strong style="${bmiStat.c}">${bmiStat.t}</strong> based on BMI standards.
-                                ${bmiStat.t === 'Normal Weight' ? 'Maintain current nutritional balance and physical activity levels.' : 'A review of caloric intake and energy expenditure is recommended to align with health goals.'}
-                            </p>
                         </div>
                     </div>
 
                     ${settings.metabolic ? `
                     <div class="report-grid report-section">
                         <div style="border: 1px solid #ddd; padding: 12px; border-radius: 10px;">
-                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; margin: 0 0 10px 0;">Nutrition & Metabolism</h3>
+                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; margin: 0 0 10px 0;">Nutrition Targets</h3>
                             <div style="font-size: 9pt; line-height: 1.6;">
-                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Basal Metabolic Rate (BMR):</span><strong>${p.bmr || '-'} kcal</strong></div>
-                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Total Energy (TDEE):</span><strong>${p.tdee || '-'} kcal</strong></div>
                                 <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Daily Protein:</span><strong>${p.protRange || '-'}</strong></div>
-                                <div style="display: flex; justify-content: space-between;"><span>Daily Carbs:</span><strong>${p.carbRange || '-'}</strong></div>
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Daily Carbs:</span><strong>${p.carbRange || '-'}</strong></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Total TDEE:</span><strong>${p.tdee || '-'} kcal</strong></div>
                             </div>
-                            <p class="report-detail-text">BMR is energy burned at rest. TDEE includes activity. Eat > BMR but < TDEE for weight loss.</p>
                         </div>
                         <div style="border: 1px solid #ddd; padding: 12px; border-radius: 10px;">
                             <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; margin: 0 0 10px 0;">Cardiac Overview</h3>
@@ -939,24 +789,15 @@
                                 <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee;"><span>Resting HR:</span><strong>${p.rhr || '-'} bpm</strong></div>
                                 <div style="display: flex; justify-content: space-between;"><span>Max HR (Est):</span><strong>${p.maxHR || '-'} bpm</strong></div>
                             </div>
-                            <p class="report-detail-text">Zones calculated using Karvonen formula (Heart Rate Reserve), offering higher precision for individual fitness levels.</p>
                         </div>
                     </div>` : ''}
 
                     <div class="report-grid report-section">
-                        ${settings.cardiac && zonesHtml ? `<div>
-                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 3px; margin: 0 0 10px 0;">Training Zones</h3>
-                            ${zonesHtml}
-                            <p class="report-detail-text">
-                                <strong>Z2 (Light):</strong> Best for fat oxidation and building aerobic base.<br>
-                                <strong>Z4 (Hard):</strong> Increases anaerobic threshold and speed endurance.
-                            </p>
-                        </div>` : '<div></div>'}
+                        ${settings.cardiac && zonesHtml ? `<div><h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 3px; margin: 0 0 10px 0;">Training Zones</h3>${zonesHtml}</div>` : '<div></div>'}
                         ${settings.performance && pacesHtml ? `<div>
                             <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 3px; margin: 0 0 10px 0;">Running performance</h3>
                             <div style="margin-bottom: 5px; font-size: 10pt;"><strong>VDOT Score: ${p.vdot || '-'}</strong></div>
                             ${pacesHtml}
-                            <p class="report-detail-text">VDOT reflects current running economy. Use 'Easy' pace for recovery and 'Threshold' for tempo runs.</p>
                         </div>` : '<div></div>'}
                     </div>
 
@@ -964,7 +805,6 @@
                     <div class="report-section">
                         <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 3px; margin: 0 0 10px 0;">Strength Progress (1-Rep Max)</h3>
                         ${historyHtml}
-                        <p class="report-detail-text">1RM is a theoretical limit calculated from submaximal loads. Use ~80% of 1RM for hypertrophy and ~90% for strength gains.</p>
                     </div>` : ''}
 
                     <div style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 10px;">
@@ -982,7 +822,6 @@
         };
 
         window.onload = () => App.init();
-        window.App = App; // Attach to window for onclick compatibility
     </script>
 </body>
 </html>
